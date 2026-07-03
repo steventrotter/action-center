@@ -1,0 +1,504 @@
+/* CTA archive and single layout */
+
+.cta-list {
+    margin: 2rem auto;
+    max-width: 960px;
+}
+
+.cta-list--grid {
+    display: grid;
+    grid-template-columns: 1fr;
+    gap: 1.5rem;
+}
+
+@media (min-width: 768px) {
+    .cta-list--grid {
+        grid-template-columns: 1fr 1fr;
+    }
+}
+
+.cta-card {
+    background-color: #ffffff;
+    border-radius: 4px;
+    border: 1px solid #dddddd;
+    padding: 1.25rem 1.5rem;
+    box-shadow: 0 1px 3px rgba(0,0,0,0.05);
+}
+
+.cta-card__title {
+    margin: 0 0 0.5rem;
+    font-size: 1.125rem;
+    font-weight: 700;
+}
+
+.cta-card__summary {
+    margin: 0 0 0.75rem;
+}
+
+.cta-card__deadline {
+    margin: 0;
+    font-size: 0.9rem;
+}
+
+.cta-card__actions {
+    margin: 0;
+    margin-top: 1rem;
+    text-align: right;
+}
+
+.cta-btn,
+.cta-card__button {
+    display: inline-block;
+    padding: 0.5rem 1.25rem;
+    border-radius: 3px;
+    border: none;
+    background-color: #19a44a;
+    color: #ffffff;
+    font-weight: 600;
+    text-decoration: none;
+    cursor: pointer;
+}
+
+.cta-btn:hover,
+.cta-card__button:hover,
+.cta-btn:focus,
+.cta-card__button:focus {
+    background-color: #118137;
+    color: #ffffff;
+}
+
+/* Filters */
+
+.cta-filters {
+    max-width: 960px;
+    margin: 2rem auto 1rem;
+    display: flex;
+    flex-wrap: wrap;
+    gap: 1rem;
+}
+
+.cta-filters__group {
+    display: flex;
+    flex-direction: column;
+    flex: 1 1 160px;
+    min-width: 0;
+}
+
+.cta-filters__label {
+    font-size: 0.85rem;
+    margin-bottom: 0.25rem;
+}
+
+.cta-filters__select {
+    width: 100%;
+    min-width: 0;
+    max-width: 100%;
+    box-sizing: border-box;
+}
+
+@media (max-width: 600px) {
+    .cta-filters {
+        flex-direction: column;
+    }
+
+    .cta-filters__group {
+        flex: 1 1 auto;
+        width: 100%;
+    }
+}
+
+/* Single CTA layout */
+
+.cta-single {
+    max-width: 960px;
+    margin: 2rem auto 3rem;
+}
+
+.cta-back-link {
+    margin-bottom: 1rem;
+}
+
+.cta-section {
+    margin-top: 2rem;
+}
+
+.cta-section__title {
+    margin: 0 0 0.75rem;
+    font-size: 1.2rem;
+    font-weight: 700;
+}
+
+.cta-section__title--spaced {
+    margin-top: 2.5rem;
+}
+
+.cta-section__body p:last-child {
+    margin-bottom: 0;
+}
+
+/* Steps section */
+
+.cta-steps-grid--detail {
+    display: flex;
+    flex-direction: column;
+    gap: 1.25rem;
+}
+
+.cta-step-card {
+    border-radius: 4px;
+    border: 1px solid #dddddd;
+    background-color: #ffffff;
+    padding: 1.25rem 1.5rem;
+}
+
+.cta-step-card__label,
+.cta-step-number {
+    font-size: 0.85rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    color: #666666;
+    margin-bottom: 0.5rem;
+}
+
+.cta-step-card__body,
+.cta-step-body {
+    font-size: 0.95rem;
+}
+
+.cta-step-card__body p:last-child,
+.cta-step-body p:last-child {
+    margin-bottom: 0;
+}
+
+/* Sample Text */
+
+.cta-card--sample-text {
+    border-radius: 4px;
+    border: 1px solid #dddddd;
+    background-color: #f8fbf9;
+    padding: 1rem 1.25rem;
+    margin-bottom: 1rem;
+}
+
+.cta-sample-text__option-title {
+    margin: 0 0 0.5rem;
+    font-size: 0.85rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    color: #666666;
+}
+
+.cta-sample-text__textarea {
+    width: 100%;
+    min-height: 12rem;
+    margin: 0;
+    padding: 0.75rem;
+    font-family: inherit;
+    font-size: 1rem;
+    border-radius: 3px;
+    border: 1px solid #cccccc;
+    resize: vertical;
+}
+
+.cta-sample-text__copy-row {
+    margin-top: 0.75rem;
+}
+
+/* Related Links & Files */
+
+.cta-links-list,
+.cta-files-list {
+    list-style: none;
+    margin: 0;
+    padding: 0;
+}
+
+.cta-links-list__item,
+.cta-files-list__item {
+    margin-bottom: 0.5rem;
+}
+
+/* Restore bordered background for each link/file */
+.cta-links-list__item a,
+.cta-files-list__item a {
+    display: inline-flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 0.5rem 0.75rem;
+    border-radius: 3px;
+    border: 1px solid #dddddd;
+    background-color: #ffffff;
+    text-decoration: none;
+    color: inherit;
+}
+
+.cta-links-list__item a:hover,
+.cta-links-list__item a:focus,
+.cta-files-list__item a:hover,
+.cta-files-list__item a:focus {
+    border-color: #19a44a;
+}
+
+/* Meta (types, orgs, tags) as pills */
+
+.cta-meta {
+    margin: 0;
+}
+
+.cta-meta--pills dt {
+    font-weight: 600;
+}
+
+.cta-meta--pills dd {
+    margin: 0;
+}
+
+.cta-meta__group {
+    margin-right: 0.75rem;
+    margin-bottom: 0.5rem;
+}
+
+.cta-meta--bottom {
+    margin-top: 1.5rem;
+}
+
+.cta-meta__intro {
+    margin: 0 0 1rem;
+    color: #4a4a4a;
+}
+
+/* Clickable filter pills linking back to the Action Center */
+.cta-pill {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.3rem;
+    padding: 0.25rem 0.7rem;
+    border-radius: 999px;
+    border: 1px solid #aee0c0;
+    background-color: #e5f7eb;
+    color: #046627;
+    font-size: 0.8rem;
+    text-decoration: none;
+    margin-right: 0.35rem;
+    margin-bottom: 0.35rem;
+}
+
+/* Arrow affordance signals the pill navigates/filters rather than labelling this CTA */
+.cta-pill::after {
+    content: '\2192';
+    font-size: 0.9em;
+    line-height: 1;
+}
+
+.cta-pill:hover,
+.cta-pill:focus {
+    background-color: #c8efd5;
+    border-color: #19a44a;
+}
+/* Videos section */
+
+.cta-videos-list {
+    display: flex;
+    flex-direction: column;
+    gap: 1.5rem;
+}
+
+.cta-video-item__label {
+    margin: 0 0 0.5rem;
+    font-size: 0.95rem;
+}
+
+.cta-video-item__embed {
+    position: relative;
+    width: 100%;
+    padding-bottom: 56.25%; /* 16:9 */
+    height: 0;
+    overflow: hidden;
+    border-radius: 4px;
+    background: #000;
+}
+
+.cta-video-item__embed iframe {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    border: 0;
+}
+
+.cta-video-item__fallback {
+    margin: 0.4rem 0 0;
+    font-size: 0.8rem;
+    color: #666;
+}
+
+.cta-video-item__fallback a {
+    color: inherit;
+}
+
+/* Urgent / Ongoing section groups on Action Center */
+
+.cta-section-group {
+    margin-top: 2.5rem;
+}
+
+.cta-section-group__title {
+    font-size: 1.4rem;
+    font-weight: 700;
+    margin: 0 0 0.35rem;
+}
+
+.cta-section-group__description {
+    margin: 0 0 1rem;
+    color: #555555;
+    font-size: 0.95rem;
+}
+
+.cta-section-group--ongoing .cta-section-group__title {
+    color: #555555;
+}
+
+/* Ongoing badge on cards */
+
+.cta-card__ongoing-badge,
+.cta-upcoming-card__ongoing-badge {
+    display: inline-block;
+    margin: 0.35rem 0 0;
+    padding: 0.15rem 0.6rem;
+    border-radius: 999px;
+    background-color: #e8e8e8;
+    color: #555555;
+    font-size: 0.78rem;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+}
+
+/* Ongoing badge on single CTA page */
+
+.cta-single__ongoing-badge {
+    display: inline-block;
+    padding: 0.25rem 0.75rem;
+    border-radius: 999px;
+    background-color: #e8e8e8;
+    color: #555555;
+    font-size: 0.85rem;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+    margin-bottom: 0.5rem;
+}
+
+/* Legislator lookup section */
+
+.cta-card--legislators {
+    background-color: #f0f8f3;
+    border-color: #b8dfc7;
+}
+
+.cta-legislators__intro {
+    margin: 0 0 0.75rem;
+    font-size: 0.95rem;
+}
+
+.cta-legislators__list {
+    list-style: none;
+    margin: 0;
+    padding: 0;
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+}
+
+.cta-legislators__link {
+    display: inline-block;
+    font-weight: 600;
+    color: #19a44a;
+    text-decoration: none;
+}
+
+.cta-legislators__link:hover,
+.cta-legislators__link:focus {
+    text-decoration: underline;
+}
+
+/* Accordion (details/summary) for Related Links and Related Files */
+
+.cta-section--links,
+.cta-section--files {
+    margin-top: 2.5rem;
+}
+
+.cta-accordion {
+    border: none;
+    border-radius: 6px;
+    overflow: hidden;
+}
+
+.cta-accordion__trigger {
+    list-style: none;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 1rem;
+    user-select: none;
+    margin: 0;
+    padding: 0.85rem 1.1rem;
+    background-color: #1d7a4e;
+    color: #ffffff;
+    font-size: 1rem;
+    font-weight: 700;
+    border-radius: 6px;
+    transition: background-color 0.15s ease;
+}
+
+.cta-accordion[open] > .cta-accordion__trigger {
+    border-radius: 6px 6px 0 0;
+    background-color: #155f3c;
+}
+
+.cta-accordion__trigger:hover {
+    background-color: #155f3c;
+}
+
+.cta-accordion__trigger::-webkit-details-marker {
+    display: none;
+}
+
+.cta-accordion__trigger::after {
+    content: '';
+    flex-shrink: 0;
+    display: inline-block;
+    width: 0.55em;
+    height: 0.55em;
+    border-right: 2.5px solid #ffffff;
+    border-bottom: 2.5px solid #ffffff;
+    transform: rotate(45deg);
+    transition: transform 0.2s ease;
+    margin-top: -0.2em;
+}
+
+.cta-accordion[open] > .cta-accordion__trigger::after {
+    transform: rotate(-135deg);
+    margin-top: 0.2em;
+}
+
+.cta-accordion .cta-links-list,
+.cta-accordion .cta-files-list {
+    margin: 0;
+    padding: 0.9rem 1.1rem;
+    border: 1px solid #1d7a4e;
+    border-top: none;
+    border-radius: 0 0 6px 6px;
+    background-color: #ffffff;
+}
+
+/* Override inherited section title top margin on accordion triggers */
+.cta-section--links .cta-accordion__trigger,
+.cta-section--files .cta-accordion__trigger {
+    margin-top: 0;
+}

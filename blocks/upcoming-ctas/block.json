@@ -1,0 +1,46 @@
+{
+  "$schema": "https://schemas.wp.org/trunk/block.json",
+  "apiVersion": 2,
+  "name": "cta-manager/upcoming-ctas",
+  "title": "Upcoming CTAs",
+  "category": "widgets",
+  "icon": "megaphone",
+  "description": "Display upcoming Calls to Action",
+  "keywords": [
+    "cta",
+    "action",
+    "upcoming"
+  ],
+  "version": "1.0.0",
+  "textdomain": "calls-to-action-manager",
+  "attributes": {
+    "limit": {
+      "type": "number",
+      "default": 3
+    },
+    "ctaType": {
+      "type": "string",
+      "default": ""
+    },
+    "ctaOrg": {
+      "type": "string",
+      "default": ""
+    },
+    "actionMode": {
+      "type": "string",
+      "default": "urgent"
+    },
+    "showDeadline": {
+      "type": "boolean",
+      "default": true
+    },
+    "showViewMore": {
+      "type": "boolean",
+      "default": true
+    }
+  },
+  "supports": {
+    "html": false,
+    "align": true
+  }
+}
