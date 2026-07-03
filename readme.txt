@@ -3,7 +3,7 @@ Contributors: steventrotter
 Tags: nonprofit, advocacy, call to action, petition, activism
 Requires at least: 6.0
 Tested up to: 6.8
-Stable tag: 1.0.0
+Stable tag: 1.1.0
 Requires PHP: 7.4
 License: GPLv2 or later
 License URI: https://www.gnu.org/licenses/gpl-2.0.html
@@ -25,6 +25,7 @@ Features:
 * Public JSON feed at /wp-json/action-center/v1/actions so other websites and apps can display your current actions.
 * AI-assisted CTA creation through the WordPress MCP plugin: an assistant like Claude can draft complete CTAs from a link, always as drafts for your review.
 * JSON import and export of CTAs.
+* Automatic updates: the plugin checks its GitHub repository for new releases and updates through the normal WordPress update flow.
 
 Full documentation lives inside the plugin at Settings > Action Center > Documentation.
 
@@ -46,6 +47,9 @@ Yes. Uninstalling (deleting) the plugin removes all CTAs, their tags, and the pl
 No. The feed intentionally exposes your published, active CTAs so partner sites can amplify them. Drafts, expired, and ended CTAs are never included.
 
 == Changelog ==
+
+= 1.1.0 =
+* Automatic updates via GitHub releases (bundled Plugin Update Checker library, MIT).
 
 = 1.0.0 =
 * First public release.

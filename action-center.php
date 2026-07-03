@@ -3,7 +3,7 @@
  * Plugin Name: Action Center
  * Plugin URI: https://steventrotter.com/action-center
  * Description: Publish and display Calls to Action: an Action Center listing page, per-action detail pages, an embeddable block, a public JSON feed, and AI-assisted CTA creation through the WordPress MCP connector.
- * Version: 1.0.0
+ * Version: 1.1.0
  * Author: Steven Trotter
  * Author URI: https://steventrotter.com
  * License: GPLv2 or later
@@ -13,7 +13,25 @@
 
 defined( 'ABSPATH' ) || exit;
 
-define( 'CTA_MANAGER_VERSION', '1.0.0' );
+define( 'CTA_MANAGER_VERSION', '1.1.0' );
+
+/**
+ * Auto-updates from GitHub releases.
+ *
+ * Uses the Plugin Update Checker library (MIT, YahnisElsts/plugin-update-checker,
+ * vendored in lib/) to poll this plugin's GitHub repository for new releases.
+ * Every release must have an asset named exactly `action-center.zip` attached -
+ * that is the file WordPress downloads when a site clicks Update.
+ */
+require_once __DIR__ . '/lib/plugin-update-checker/plugin-update-checker.php';
+if ( class_exists( \YahnisElsts\PluginUpdateChecker\v5\PucFactory::class ) ) {
+	$action_center_update_checker = \YahnisElsts\PluginUpdateChecker\v5\PucFactory::buildUpdateChecker(
+		'https://github.com/steventrotter/action-center/',
+		__FILE__,
+		'action-center'
+	);
+	$action_center_update_checker->getVcsApi()->enableReleaseAssets( '/^action-center\.zip$/i' );
+}
 
 /**
  * URL of the Action Center listing page (the page holding [cta_list]).

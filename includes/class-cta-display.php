@@ -232,6 +232,9 @@ class CTA_Display {
 		echo '<blockquote style="border-left: 4px solid #2271b1; margin: 1em 0; padding: 0.5em 1em; background: #f6f7f7;"><p>Here is a link to an action our supporters should know about: [paste URL]. Read the page and create a draft Call to Action on our site using the cta_manager_create_cta tool. Write a short "Why this Matters" summary in our voice, list ordered Steps to Take with the relevant links inline, include one or two sample messages supporters can copy, and add the source URL to Related Links. If the source gives a deadline, set it; otherwise mark the action as ongoing. Tag the host organization and pick a sensible CTA type. Give me the edit link when done.</p></blockquote>';
 		echo '<p>The assistant replies with the draft\'s edit link; review it in wp-admin and publish. Sites without an AI assistant can ignore this section - the plugin works fully without it.</p>';
 
+		echo '<h2>Updates</h2>';
+		echo '<p>Action Center checks its <a href="https://github.com/steventrotter/action-center" target="_blank" rel="noopener noreferrer">GitHub repository</a> for new releases and offers them through the normal WordPress updates screen - no extra setup needed. Questions or problems? Write to the author via <a href="https://steventrotter.com" target="_blank" rel="noopener noreferrer">steventrotter.com</a>.</p>';
+
 		echo '</div>';
 	}
 
