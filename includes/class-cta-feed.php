@@ -299,7 +299,9 @@ class CTA_Feed {
 	 */
 	private function trim_plain( $text, int $max ): string {
 		$text = wp_strip_all_tags( (string) $text );
-		$text = wp_specialchars_decode( $text, ENT_QUOTES );
+		// Full entity decode: WP texturizes titles into numeric entities
+		// (e.g. &#8217; for apostrophes), which wp_specialchars_decode leaves alone.
+		$text = html_entity_decode( $text, ENT_QUOTES | ENT_HTML5, 'UTF-8' );
 		$text = trim( preg_replace( '/\s+/u', ' ', $text ) );
 
 		if ( mb_strlen( $text ) <= $max ) {

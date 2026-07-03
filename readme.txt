@@ -3,7 +3,7 @@ Contributors: steventrotter
 Tags: nonprofit, advocacy, call to action, petition, activism
 Requires at least: 6.0
 Tested up to: 6.8
-Stable tag: 1.1.0
+Stable tag: 1.1.1
 Requires PHP: 7.4
 License: GPLv2 or later
 License URI: https://www.gnu.org/licenses/gpl-2.0.html
@@ -47,6 +47,9 @@ Yes. Uninstalling (deleting) the plugin removes all CTAs, their tags, and the pl
 No. The feed intentionally exposes your published, active CTAs so partner sites can amplify them. Drafts, expired, and ended CTAs are never included.
 
 == Changelog ==
+
+= 1.1.1 =
+* Fixed: feed titles and summaries now fully decode HTML entities (curly apostrophes etc. arrive as plain text).
 
 = 1.1.0 =
 * Automatic updates via GitHub releases (bundled Plugin Update Checker library, MIT).
