@@ -3,7 +3,7 @@ Contributors: steventrotter
 Tags: nonprofit, advocacy, call to action, petition, activism
 Requires at least: 6.0
 Tested up to: 6.8
-Stable tag: 1.1.1
+Stable tag: 1.2.0
 Requires PHP: 7.4
 License: GPLv2 or later
 License URI: https://www.gnu.org/licenses/gpl-2.0.html
@@ -22,7 +22,7 @@ Features:
 * Per-CTA detail pages with automatic expired notices once a deadline passes.
 * Upcoming CTAs block for featuring current actions on any page.
 * Automatic Find Your Legislators section for CTAs tagged with the "Contact Your Legislator" type.
-* Public JSON feed at /wp-json/action-center/v1/actions so other websites and apps can display your current actions.
+* Public JSON feed at /wp-json/action-center/v1/actions so other websites and apps can display your current actions, including a full-content mode for native apps.
 * AI-assisted CTA creation through the WordPress MCP plugin: an assistant like Claude can draft complete CTAs from a link, always as drafts for your review.
 * JSON import and export of CTAs.
 * Automatic updates: the plugin checks its GitHub repository for new releases and updates through the normal WordPress update flow.
@@ -47,6 +47,11 @@ Yes. Uninstalling (deleting) the plugin removes all CTAs, their tags, and the pl
 No. The feed intentionally exposes your published, active CTAs so partner sites can amplify them. Drafts, expired, and ended CTAs are never included.
 
 == Changelog ==
+
+= 1.2.0 =
+* Feed: new `?full=1` parameter adds a `content` object to each item with the full body (summary_html, steps, sample_texts, links, videos, button_text), so apps and partner sites can show a complete action without an authenticated request.
+* Feed: every item now carries a `modified` timestamp in UTC, so a service watching the feed can tell a new action from an edited one.
+* Feed: `image` is now the 768px size instead of 300px, which looks far better on a phone. The old size is still available as `image_small`.
 
 = 1.1.1 =
 * Fixed: feed titles and summaries now fully decode HTML entities (curly apostrophes etc. arrive as plain text).

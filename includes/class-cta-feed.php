@@ -10,10 +10,19 @@
  * Designed to be consumable by any external site or service:
  *
  * - Core item fields: id, title, summary, url, urgency, date, expires,
- *   image. Extra fields (organizations, types) are additive; minimal
+ *   modified, image. Extra fields (organizations, types) are additive; minimal
  *   consumers can ignore them.
  * - Query params let any consumer filter server-side: ?limit=, ?urgency=,
- *   ?type=, ?org= (taxonomy slugs).
+ *   ?type=, ?org= (taxonomy slugs), ?full=1.
+ * - ?full=1 adds a `content` object per item carrying the body a detail
+ *   screen needs: summary_html, steps, sample_texts, links, videos and
+ *   button_text. Added 1.2.0 for native app clients, which cannot reach
+ *   `_cta_*` post meta over core REST because it is protected and anonymous
+ *   readers get an empty meta object. Everything in `content` is already
+ *   public on the CTA's own detail page, so this exposes nothing new.
+ * - `modified` is the post's last-modified time in UTC. A poller comparing it
+ *   against what it saw last can tell a newly published action from an edited
+ *   one without keeping a copy of the whole payload.
  * - Urgency is "now" for any item with a future deadline and "ongoing" for
  *   open-ended items; "soon" is accepted as a filter value but never emitted
  *   by default. The `cta_manager_feed_item` filter lets a site remap urgency
@@ -93,6 +102,12 @@ class CTA_Feed {
 						'type'              => 'string',
 						'sanitize_callback' => 'sanitize_title',
 					],
+					'full'    => [
+						'description'       => 'Include a `content` object per item with the full body: summary_html, steps, sample_texts, links, videos, button_text.',
+						'type'              => 'boolean',
+						'default'           => false,
+						'sanitize_callback' => 'rest_sanitize_boolean',
+					],
 				],
 			]
 		);
@@ -107,6 +122,7 @@ class CTA_Feed {
 	public function get_actions( WP_REST_Request $request ): WP_REST_Response {
 		$limit   = min( self::MAX_ITEMS, max( 1, (int) $request['limit'] ) );
 		$urgency = $request['urgency'];
+		$full    = ! empty( $request['full'] );
 
 		$tax_query = [];
 		if ( ! empty( $request['type'] ) ) {
@@ -151,7 +167,7 @@ class CTA_Feed {
 			$deadline_query = new WP_Query( $deadline_args );
 
 			foreach ( $deadline_query->posts as $post ) {
-				$items[] = $this->build_item( $post, 'now' );
+				$items[] = $this->build_item( $post, 'now', $full );
 			}
 		}
 
@@ -189,7 +205,7 @@ class CTA_Feed {
 			$ongoing_query = new WP_Query( $ongoing_args );
 
 			foreach ( $ongoing_query->posts as $post ) {
-				$items[] = $this->build_item( $post, 'ongoing' );
+				$items[] = $this->build_item( $post, 'ongoing', $full );
 			}
 		}
 
@@ -235,16 +251,19 @@ class CTA_Feed {
 	 *
 	 * @param WP_Post $post    The CTA post.
 	 * @param string  $urgency "now" or "ongoing".
+	 * @param bool    $full    Whether to attach the full `content` object.
 	 * @return array
 	 */
-	private function build_item( WP_Post $post, string $urgency ): array {
+	private function build_item( WP_Post $post, string $urgency, bool $full = false ): array {
 		$item = [
-			'id'      => 'cta-' . $post->ID,
-			'title'   => $this->trim_plain( get_the_title( $post ), self::TITLE_MAX ),
-			'summary' => $this->trim_plain( get_post_meta( $post->ID, '_cta_summary', true ), self::SUMMARY_MAX ),
-			'url'     => get_permalink( $post ),
-			'urgency' => $urgency,
-			'date'    => get_the_date( 'Y-m-d', $post ),
+			'id'       => 'cta-' . $post->ID,
+			'title'    => $this->trim_plain( get_the_title( $post ), self::TITLE_MAX ),
+			'summary'  => $this->trim_plain( get_post_meta( $post->ID, '_cta_summary', true ), self::SUMMARY_MAX ),
+			'url'      => get_permalink( $post ),
+			'urgency'  => $urgency,
+			'date'     => get_the_date( 'Y-m-d', $post ),
+			// UTC, so a poller can compare without knowing the site's timezone.
+			'modified' => get_post_modified_time( 'Y-m-d\TH:i:s\Z', true, $post ),
 		];
 
 		// Expires: date portion of the stored datetime-local string ("2026-07-15T17:00").
@@ -253,14 +272,26 @@ class CTA_Feed {
 			$item['expires'] = substr( $end, 0, 10 );
 		}
 
-		$image = get_the_post_thumbnail_url( $post, 'medium' );
+		// `medium` is 300px wide and looks soft on a phone. `image` is now the
+		// 768px size; `image_small` keeps the old one for consumers that were
+		// relying on a thumbnail. WordPress falls back to the full-size URL
+		// when the requested size was never generated for that attachment.
+		$image = get_the_post_thumbnail_url( $post, 'medium_large' );
 		if ( $image ) {
 			$item['image'] = $image;
+		}
+		$image_small = get_the_post_thumbnail_url( $post, 'medium' );
+		if ( $image_small ) {
+			$item['image_small'] = $image_small;
 		}
 
 		// Additive fields beyond the shared spec; consumers may ignore them.
 		$item['organizations'] = $this->term_names( $post->ID, 'cta_org' );
 		$item['types']         = $this->term_names( $post->ID, 'cta_type' );
+
+		if ( $full ) {
+			$item['content'] = $this->build_content( $post );
+		}
 
 		/**
 		 * Filter a single feed item.
@@ -272,6 +303,112 @@ class CTA_Feed {
 		 * @param WP_Post $post The source CTA post.
 		 */
 		return apply_filters( 'cta_manager_feed_item', $item, $post );
+	}
+
+	/**
+	 * Build the full body content for one CTA.
+	 *
+	 * Only attached when ?full=1. Mirrors the sections the single-CTA detail
+	 * page renders, so a native client can show the same thing without an
+	 * authenticated call: everything here is already public at the CTA's
+	 * permalink.
+	 *
+	 * HTML is re-run through wp_kses_post on the way out. The meta sanitizers
+	 * in CTA_Meta already did this on write, but this is a public endpoint and
+	 * consumers will inject the result into a DOM, so it is cheap insurance
+	 * against anything that predates those sanitizers.
+	 *
+	 * @param WP_Post $post The CTA post.
+	 * @return array
+	 */
+	private function build_content( WP_Post $post ): array {
+		$summary = (string) get_post_meta( $post->ID, '_cta_summary', true );
+
+		// Matches the detail page: block-level HTML passes through, plain text
+		// gets wpautop. Guarded because the helper lives in CTA_Display.
+		if ( function_exists( 'cta_manager_render_content' ) ) {
+			$summary_html = cta_manager_render_content( $summary );
+		} else {
+			$summary_html = wp_kses_post( $summary );
+		}
+
+		$steps = [];
+		foreach ( $this->meta_array( $post->ID, '_cta_steps' ) as $step ) {
+			$step = is_string( $step ) ? trim( $step ) : '';
+			if ( '' !== $step ) {
+				$steps[] = wp_kses_post( $step );
+			}
+		}
+
+		$sample_texts = [];
+		foreach ( $this->meta_array( $post->ID, '_cta_sample_texts' ) as $sample ) {
+			$sample = is_string( $sample ) ? trim( $sample ) : '';
+			if ( '' !== $sample ) {
+				// Stored and displayed as plain text, never as HTML.
+				$sample_texts[] = wp_strip_all_tags( $sample );
+			}
+		}
+
+		$button_text = trim( (string) get_post_meta( $post->ID, '_cta_button_text', true ) );
+
+		return [
+			'summary_html' => $summary_html,
+			'steps'        => $steps,
+			'sample_texts' => $sample_texts,
+			'links'        => $this->url_label_pairs( $post->ID, '_cta_links' ),
+			'videos'       => $this->url_label_pairs( $post->ID, '_cta_videos' ),
+			'button_text'  => '' !== $button_text ? $button_text : __( 'Learn More', 'action-center' ),
+		];
+	}
+
+	/**
+	 * Read an array-valued meta key, tolerating the empty string WordPress
+	 * returns when the key has never been set.
+	 *
+	 * @param int    $post_id Post ID.
+	 * @param string $key     Meta key.
+	 * @return array
+	 */
+	private function meta_array( int $post_id, string $key ): array {
+		$value = get_post_meta( $post_id, $key, true );
+
+		return is_array( $value ) ? $value : [];
+	}
+
+	/**
+	 * Normalize a repeatable {url, label} meta field for output.
+	 *
+	 * Rows with no URL are dropped: they cannot be acted on and only pad the
+	 * payload. A row with no label falls back to its URL, so a consumer always
+	 * has something to render.
+	 *
+	 * @param int    $post_id Post ID.
+	 * @param string $key     Meta key.
+	 * @return array
+	 */
+	private function url_label_pairs( int $post_id, string $key ): array {
+		$out = [];
+
+		foreach ( $this->meta_array( $post_id, $key ) as $row ) {
+			if ( ! is_array( $row ) || empty( $row['url'] ) ) {
+				continue;
+			}
+
+			$url = esc_url_raw( (string) $row['url'] );
+			if ( '' === $url ) {
+				continue;
+			}
+
+			$label = isset( $row['label'] ) ? wp_strip_all_tags( (string) $row['label'] ) : '';
+			$label = trim( html_entity_decode( $label, ENT_QUOTES | ENT_HTML5, 'UTF-8' ) );
+
+			$out[] = [
+				'url'   => $url,
+				'label' => '' !== $label ? $label : $url,
+			];
+		}
+
+		return $out;
 	}
 
 	/**

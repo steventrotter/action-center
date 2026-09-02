@@ -285,7 +285,7 @@
     margin-bottom: 0.35rem;
 }
 
-/* Arrow affordance signals the pill navigates/filters rather than labelling this CTA */
+/* Arrow affordance signals the pill navigates/filters rather than labeling this CTA */
 .cta-pill::after {
     content: '\2192';
     font-size: 0.9em;
