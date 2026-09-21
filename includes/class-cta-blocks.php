@@ -28,7 +28,8 @@ class CTA_Blocks {
 			'cta-manager-upcoming-ctas-editor-script',
 			plugin_dir_url( __FILE__ ) . '../blocks/upcoming-ctas/block.js',
 			[ 'wp-blocks', 'wp-element', 'wp-editor', 'wp-components', 'wp-i18n', 'wp-block-editor', 'wp-server-side-render' ],
-			CTA_MANAGER_VERSION
+			CTA_MANAGER_VERSION,
+			true
 		);
 
 		// Register block style.

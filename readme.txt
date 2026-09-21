@@ -3,7 +3,7 @@ Contributors: steventrotter
 Tags: nonprofit, advocacy, call to action, petition, activism
 Requires at least: 6.0
 Tested up to: 7.1
-Stable tag: 1.5.0
+Stable tag: 1.5.1
 Requires PHP: 7.4
 License: GPLv2 or later
 License URI: https://www.gnu.org/licenses/gpl-2.0.html
@@ -48,6 +48,11 @@ Yes. Uninstalling (deleting) the plugin removes all CTAs, their tags, and the pl
 No. The feed intentionally exposes your published, active CTAs so partner sites can amplify them. Drafts, expired, and ended CTAs are never included.
 
 == Changelog ==
+
+= 1.5.1 =
+* Changed: the front-end sample-text copy script and the admin deadline and comment-builder scripts are now enqueued from files instead of printed inline, for performance and compatibility.
+* Fixed: the Plugin URI now points at a working page.
+* Hardening: output escaping, input unslashing, nonce handling, and internationalization brought fully in line with the WordPress.org Plugin Check ruleset. No functional changes.
 
 = 1.5.0 =
 * New: the Guided builder now counts characters the way the government form does (regulations.gov allows 5000) instead of counting words. It shows a live "N / 5000 characters" count and will not hand off a comment that is over the limit. The limit is a site default under Settings and can be overridden per action next to the submission URL; set 0 for no limit.

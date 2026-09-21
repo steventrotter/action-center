@@ -687,19 +687,7 @@ class CTA_Meta {
 		echo '<label>Deadline Date &amp; Time<br>';
 		echo '<input type="datetime-local" name="cta_end" id="cta_end" value="' . esc_attr( $end ) . '" style="width:100%;"></label>';
 		echo '</div>';
-
-		echo '<script>
-			(function() {
-				var cb         = document.getElementById("cta_ongoing");
-				var deadlineRow = document.getElementById("cta-deadline-row");
-				var endedRow    = document.getElementById("cta-ended-row");
-				if (!cb) return;
-				cb.addEventListener("change", function() {
-					if (deadlineRow) deadlineRow.style.display = cb.checked ? "none" : "";
-					if (endedRow)    endedRow.style.display    = cb.checked ? "" : "none";
-				});
-			})();
-		</script>';
+		// Ongoing/deadline row toggle is handled in assets/admin.js (enqueued).
 	}
 
 	public function render_links_box( $post ) {
@@ -787,7 +775,7 @@ class CTA_Meta {
 			$editor_id = 'cta_step_editor_initial_' . $index;
 			
 			echo '<div class="cta-step-item">';
-			echo '<p><strong>Step ' . ( $index + 1 ) . '</strong></p>';
+			echo '<p><strong>Step ' . esc_html( $index + 1 ) . '</strong></p>';
 			echo '<div class="cta-step-editor-wrapper">';
 			
 			wp_editor(
@@ -830,7 +818,7 @@ class CTA_Meta {
 		$index = 0;
 		foreach ( $sample_texts as $sample ) {
 			echo '<div class="cta-sample-text-item">';
-			echo '<p><strong>Option ' . ( $index + 1 ) . '</strong></p>';
+			echo '<p><strong>Option ' . esc_html( $index + 1 ) . '</strong></p>';
 			echo '<textarea name="cta_sample_texts[]" rows="6" style="width:100%;">' . esc_textarea( $sample ) . '</textarea>';
 			echo '<p><button type="button" class="button cta-remove-sample-text">Remove Option</button></p>';
 			echo '</div>';
@@ -975,23 +963,7 @@ class CTA_Meta {
 		echo '<template id="cta-tp-template">';
 		$this->render_tp_row( '', '' );
 		echo '</template>';
-		echo '<script>
-			(function(){
-				var tpWrap = document.getElementById("cta-tp-wrapper");
-				var tpTpl  = document.getElementById("cta-tp-template");
-				var addTp  = document.getElementById("cta-add-tp");
-				if(addTp){ addTp.addEventListener("click", function(){ tpWrap.insertAdjacentHTML("beforeend", tpTpl.innerHTML); }); }
-				if(tpWrap){ tpWrap.addEventListener("click", function(e){ if(e.target.classList.contains("cta-remove-tp")){ var r=e.target.closest(".cta-tp-row"); if(r) r.remove(); } }); }
-				var ppWrap = document.getElementById("cta-pp-wrapper");
-				var addPp  = document.getElementById("cta-add-pp");
-				if(addPp){ addPp.addEventListener("click", function(){
-					var d=document.createElement("div"); d.className="cta-pp-row"; d.style.marginBottom="0.5rem";
-					d.innerHTML = \'<input type="text" name="cta_personal_prompts[]" value="" style="width:calc(100% - 90px);" placeholder="Why does this place matter to you?"> <button type="button" class="button cta-remove-pp">Remove</button>\';
-					ppWrap.appendChild(d);
-				}); }
-				if(ppWrap){ ppWrap.addEventListener("click", function(e){ if(e.target.classList.contains("cta-remove-pp")){ var r=e.target.closest(".cta-pp-row"); if(r) r.remove(); } }); }
-			})();
-		</script>';
+		// Talking-point / personal-prompt add/remove is handled in assets/admin.js (enqueued).
 	}
 
 	/** Render a single talking-point editor row (used for existing rows and the JS template). */
@@ -1044,9 +1016,9 @@ class CTA_Meta {
 		}
 
 		if ( isset( $_POST['cta_links_url'] ) && is_array( $_POST['cta_links_url'] ) ) {
-			$urls   = array_map( 'wp_unslash', $_POST['cta_links_url'] );
+			$urls   = array_map( 'esc_url_raw', wp_unslash( $_POST['cta_links_url'] ) );
 			$labels = isset( $_POST['cta_links_label'] ) && is_array( $_POST['cta_links_label'] )
-				? array_map( 'wp_unslash', $_POST['cta_links_label'] )
+				? array_map( 'sanitize_text_field', wp_unslash( $_POST['cta_links_label'] ) )
 				: [];
 			$links  = [];
 			foreach ( $urls as $i => $url ) {
@@ -1066,7 +1038,7 @@ class CTA_Meta {
 		if ( isset( $_POST['cta_files_id'] ) && is_array( $_POST['cta_files_id'] ) ) {
 			$ids    = array_map( 'intval', wp_unslash( $_POST['cta_files_id'] ) );
 			$labels = isset( $_POST['cta_files_label'] ) && is_array( $_POST['cta_files_label'] )
-				? array_map( 'wp_unslash', $_POST['cta_files_label'] )
+				? array_map( 'sanitize_text_field', wp_unslash( $_POST['cta_files_label'] ) )
 				: [];
 			$files  = [];
 			foreach ( $ids as $i => $id ) {
@@ -1083,9 +1055,9 @@ class CTA_Meta {
 		}
 
 		if ( isset( $_POST['cta_videos_url'] ) && is_array( $_POST['cta_videos_url'] ) ) {
-			$urls   = array_map( 'wp_unslash', $_POST['cta_videos_url'] );
+			$urls   = array_map( 'esc_url_raw', wp_unslash( $_POST['cta_videos_url'] ) );
 			$labels = isset( $_POST['cta_videos_label'] ) && is_array( $_POST['cta_videos_label'] )
-				? array_map( 'wp_unslash', $_POST['cta_videos_label'] )
+				? array_map( 'sanitize_text_field', wp_unslash( $_POST['cta_videos_label'] ) )
 				: [];
 			$videos = [];
 			foreach ( $urls as $i => $url ) {
@@ -1103,7 +1075,7 @@ class CTA_Meta {
 		}
 
 		if ( isset( $_POST['cta_steps'] ) && is_array( $_POST['cta_steps'] ) ) {
-			$steps       = array_map( 'wp_unslash', $_POST['cta_steps'] );
+			$steps       = array_map( 'wp_kses_post', wp_unslash( $_POST['cta_steps'] ) );
 			$clean_steps = array_map( 'wp_kses_post', array_filter( $steps ) );
 			update_post_meta( $post_id, '_cta_steps', $clean_steps );
 		} else {
@@ -1111,7 +1083,7 @@ class CTA_Meta {
 		}
 
 		if ( isset( $_POST['cta_sample_texts'] ) && is_array( $_POST['cta_sample_texts'] ) ) {
-			$sample_texts       = array_map( 'wp_unslash', $_POST['cta_sample_texts'] );
+			$sample_texts       = array_map( 'sanitize_textarea_field', wp_unslash( $_POST['cta_sample_texts'] ) );
 			$clean_sample_texts = array_map( 'sanitize_textarea_field', array_filter( $sample_texts ) );
 			update_post_meta( $post_id, '_cta_sample_texts', $clean_sample_texts );
 		} else {
@@ -1136,15 +1108,16 @@ class CTA_Meta {
 	 * are deliberately NOT touched here; they are owned by the public tracking route.
 	 */
 	private function save_guided_data( $post_id ) {
+		// phpcs:disable WordPress.Security.NonceVerification.Missing -- Nonce is verified in save_meta_data() before this method runs.
 
 		$format = isset( $_POST['cta_format'] ) ? sanitize_text_field( wp_unslash( $_POST['cta_format'] ) ) : 'simple';
 		update_post_meta( $post_id, '_cta_format', $this->sanitize_format( $format ) );
 
 		// Talking points: parallel label[] and text[] arrays.
 		if ( isset( $_POST['cta_tp_label'] ) && is_array( $_POST['cta_tp_label'] ) ) {
-			$labels = array_map( 'wp_unslash', $_POST['cta_tp_label'] );
+			$labels = array_map( 'sanitize_text_field', wp_unslash( $_POST['cta_tp_label'] ) );
 			$texts  = isset( $_POST['cta_tp_text'] ) && is_array( $_POST['cta_tp_text'] )
-				? array_map( 'wp_unslash', $_POST['cta_tp_text'] )
+				? array_map( 'wp_kses_post', wp_unslash( $_POST['cta_tp_text'] ) )
 				: [];
 			$points = [];
 			foreach ( $labels as $i => $label ) {
@@ -1164,7 +1137,7 @@ class CTA_Meta {
 		}
 
 		if ( isset( $_POST['cta_personal_prompts'] ) && is_array( $_POST['cta_personal_prompts'] ) ) {
-			$prompts = array_map( 'wp_unslash', $_POST['cta_personal_prompts'] );
+			$prompts = array_map( 'sanitize_text_field', wp_unslash( $_POST['cta_personal_prompts'] ) );
 			$prompts = array_map( 'sanitize_text_field', array_filter( $prompts ) );
 			update_post_meta( $post_id, '_cta_personal_prompts', array_values( $prompts ) );
 		} else {
@@ -1180,7 +1153,7 @@ class CTA_Meta {
 		];
 		foreach ( $scalars as $field => $spec ) {
 			if ( isset( $_POST[ $field ] ) ) {
-				$clean = call_user_func( $spec[1], wp_unslash( $_POST[ $field ] ) );
+				$clean = call_user_func( $spec[1], wp_unslash( $_POST[ $field ] ) ); // phpcs:ignore WordPress.Security.ValidatedSanitizedInput.InputNotSanitized -- Sanitized by the per-field callback in $scalars.
 				update_post_meta( $post_id, $spec[0], $clean );
 			}
 		}
@@ -1199,5 +1172,6 @@ class CTA_Meta {
 		update_post_meta( $post_id, '_cta_collect_identity', in_array( $identity_mode, [ 'default', 'on', 'off' ], true ) ? $identity_mode : 'default' );
 
 		update_post_meta( $post_id, '_cta_show_counter', empty( $_POST['cta_show_counter'] ) ? 0 : 1 );
+		// phpcs:enable WordPress.Security.NonceVerification.Missing
 	}
 }

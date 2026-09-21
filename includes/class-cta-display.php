@@ -69,9 +69,20 @@ class CTA_Display {
 			CTA_MANAGER_VERSION
 		);
 
-		// Guided comment builder assets, only on a single guided CTA.
+		// Front-end scripts on single CTA pages.
 		if ( is_singular( 'cta' ) ) {
 			$post_id = get_queried_object_id();
+
+			// Sample Text copy-to-clipboard (enqueued; was an inline footer script).
+			wp_enqueue_script(
+				'cta-sample-text',
+				plugin_dir_url( __FILE__ ) . '../assets/sample-text.js',
+				[],
+				CTA_MANAGER_VERSION,
+				true
+			);
+
+			// Guided comment builder assets, only on a single guided CTA.
 			if ( $post_id && 'guided' === get_post_meta( $post_id, '_cta_format', true ) ) {
 				wp_enqueue_style(
 					'cta-comment-builder',
@@ -149,8 +160,9 @@ class CTA_Display {
 			&& check_admin_referer( 'cta_import_nonce' )
 			&& ! empty( $_FILES['cta_import_file']['tmp_name'] )
 		) {
-			$imported = self::handle_import( $_FILES['cta_import_file']['tmp_name'] );
+			$imported = self::handle_import( sanitize_text_field( wp_unslash( $_FILES['cta_import_file']['tmp_name'] ) ) );
 			if ( $imported > 0 ) {
+				// translators: %d is the number of CTAs imported.
 				$notices[] = [ 'success', sprintf( _n( '%d CTA imported as a draft for review.', '%d CTAs imported as drafts for review.', $imported, 'action-center' ), $imported ) ];
 			} else {
 				$notices[] = [ 'error', 'Import failed. Check that the file is a valid Fernwood Action Center export within the size limit.' ];
@@ -194,7 +206,7 @@ class CTA_Display {
 			[
 				'name'              => 'cta_manager_action_center_page',
 				'id'                => 'cta_manager_action_center_page',
-				'selected'          => $action_center_page,
+				'selected'          => absint( $action_center_page ),
 				'show_option_none'  => 'Auto-detect (page with slug "act-now")',
 				'option_none_value' => '0',
 			]
@@ -277,7 +289,7 @@ class CTA_Display {
 
 		echo '<h2>Public JSON feed</h2>';
 		echo '<p>The plugin serves your active CTAs as a public JSON feed - no authentication needed. Other websites, apps, and partner tools can display your current actions from:</p>';
-		echo '<p><code>' . $feed_url . '</code></p>';
+		echo '<p><code>' . esc_url( $feed_url ) . '</code></p>';
 		echo '<p>Each item carries: <code>id</code>, <code>title</code> (up to 80 characters), <code>summary</code> (plain text, up to 240 characters), <code>url</code> (the CTA detail page), <code>urgency</code> ("now" for deadline actions, "ongoing" for open-ended ones), <code>date</code> (published), <code>expires</code> (deadline date, when set), <code>image</code> (featured image, when set), and <code>organizations</code> / <code>types</code> arrays. Deadline actions come first (soonest deadline at the top), then ongoing actions (newest first), capped at 20 by default.</p>';
 		echo '<p>Optional query parameters: <code>?limit=</code> (1-50), <code>?urgency=now</code> or <code>?urgency=ongoing</code>, <code>?type=</code> and <code>?org=</code> (taxonomy slugs). Expired and ended CTAs are excluded automatically, so consumers never need to filter them out. The feed sends <code>Access-Control-Allow-Origin: *</code>, so browser-based widgets can read it directly.</p>';
 
@@ -422,8 +434,8 @@ class CTA_Display {
 	 */
 	public function render_cta_list() {
 
-		$current_type = isset( $_GET['cta_type'] ) ? sanitize_text_field( wp_unslash( $_GET['cta_type'] ) ) : '';
-		$current_org  = isset( $_GET['cta_org'] ) ? sanitize_text_field( wp_unslash( $_GET['cta_org'] ) ) : '';
+		$current_type = isset( $_GET['cta_type'] ) ? sanitize_text_field( wp_unslash( $_GET['cta_type'] ) ) : ''; // phpcs:ignore WordPress.Security.NonceVerification.Recommended -- Read-only public listing filter from a GET query var; no state change.
+		$current_org  = isset( $_GET['cta_org'] ) ? sanitize_text_field( wp_unslash( $_GET['cta_org'] ) ) : ''; // phpcs:ignore WordPress.Security.NonceVerification.Recommended -- Read-only public listing filter from a GET query var; no state change.
 
 		// On a static Page holding the shortcode, WordPress paginates with the
 		// 'page' query var, not 'paged'; read both so page 2+ is reachable either way.
@@ -525,8 +537,7 @@ class CTA_Display {
 				echo '<select name="cta_type" id="cta-filter-type" class="cta-filters__select cta-filters__select--type">';
 				echo '<option value="">All types</option>';
 				foreach ( $types as $type ) {
-					$selected = ( $current_type === $type->slug ) ? ' selected' : '';
-					echo '<option value="' . esc_attr( $type->slug ) . '"' . $selected . '>' . esc_html( $type->name ) . '</option>';
+					echo '<option value="' . esc_attr( $type->slug ) . '"' . selected( $current_type, $type->slug, false ) . '>' . esc_html( $type->name ) . '</option>';
 				}
 				echo '</select>';
 				echo '</div>';
@@ -538,8 +549,7 @@ class CTA_Display {
 				echo '<select name="cta_org" id="cta-filter-org" class="cta-filters__select cta-filters__select--org">';
 				echo '<option value="">All organizations</option>';
 				foreach ( $org_terms as $org ) {
-					$selected = ( $current_org === $org->slug ) ? ' selected' : '';
-					echo '<option value="' . esc_attr( $org->slug ) . '"' . $selected . '>' . esc_html( $org->name ) . '</option>';
+					echo '<option value="' . esc_attr( $org->slug ) . '"' . selected( $current_org, $org->slug, false ) . '>' . esc_html( $org->name ) . '</option>';
 				}
 				echo '</select>';
 				echo '</div>';
@@ -561,7 +571,7 @@ class CTA_Display {
 		if ( $urgent_query->have_posts() ) {
 			while ( $urgent_query->have_posts() ) {
 				$urgent_query->the_post();
-				echo self::render_cta_card( get_the_ID() );
+				echo self::render_cta_card( get_the_ID() ); // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped -- render_cta_card() returns markup escaped internally.
 			}
 			wp_reset_postdata();
 		} else {
@@ -586,7 +596,7 @@ class CTA_Display {
 				'next_text' => '&raquo;',
 			] );
 			if ( $links ) {
-				echo '<nav class="cta-pagination" aria-label="Urgent Actions">' . $links . '</nav>';
+				echo '<nav class="cta-pagination" aria-label="Urgent Actions">' . $links . '</nav>'; // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped -- $links is markup returned by paginate_links().
 			}
 		}
 
@@ -601,7 +611,7 @@ class CTA_Display {
 
 			while ( $ongoing_query->have_posts() ) {
 				$ongoing_query->the_post();
-				echo self::render_cta_card( get_the_ID() );
+				echo self::render_cta_card( get_the_ID() ); // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped -- render_cta_card() returns markup escaped internally.
 			}
 			wp_reset_postdata();
 
@@ -649,7 +659,7 @@ class CTA_Display {
 		echo '<div class="cta-card__body">';
 		echo '<h3 class="cta-card__title"><a href="' . esc_url( get_permalink( $post_id ) ) . '">' . esc_html( get_the_title( $post_id ) ) . '</a></h3>';
 		if ( $summary ) {
-			echo '<p class="cta-card__summary">' . $summary . '</p>';
+			echo '<p class="cta-card__summary">' . $summary . '</p>'; // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped -- $summary is escaped with esc_html() above.
 		}
 		if ( $ongoing && ! $ended ) {
 			echo '<p class="cta-card__deadline"><strong>Deadline:</strong><br>Ongoing Action</p>';
@@ -789,7 +799,7 @@ function cta_manager_single_cta_content( $content ) {
 		echo '<h2 class="cta-section__title cta-section__title--spaced">Why this Matters</h2>';
 		echo '<div class="cta-card cta-card--summary">';
 		echo '<div class="cta-section__body">';
-		echo cta_manager_render_content( $summary );
+		echo cta_manager_render_content( $summary ); // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped -- cta_manager_render_content() returns content escaped with wp_kses_post().
 		echo '</div>';
 		echo '</div>';
 		echo '</section>';
@@ -799,7 +809,7 @@ function cta_manager_single_cta_content( $content ) {
 
 		// Guided: the full two-part flow (summary, collapsed "learn more", builder,
 		// then the submit hand-off and follow-up steps) is rendered by one function.
-		echo cta_manager_render_guided_action(
+		echo cta_manager_render_guided_action( // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped -- Returns markup escaped internally.
 			get_the_ID(),
 			[
 				'summary' => $summary,
@@ -882,7 +892,7 @@ function cta_manager_single_cta_content( $content ) {
 			}
 			echo '<div class="cta-step-card cta-step-card--detail">';
 			echo '<div class="cta-step-number cta-step-card__label">Step ' . intval( $step_number ) . '</div>';
-			echo '<div class="cta-step-body cta-step-card__body">' . cta_manager_render_content( $step_html ) . '</div>';
+			echo '<div class="cta-step-body cta-step-card__body">' . cta_manager_render_content( $step_html ) . '</div>'; // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped -- cta_manager_render_content() returns content escaped with wp_kses_post().
 			echo '</div>';
 			$step_number++;
 		}
@@ -928,7 +938,7 @@ function cta_manager_single_cta_content( $content ) {
 			echo '<div class="cta-card cta-card--sample-text">';
 
 			if ( count( $sample_texts ) > 1 ) {
-				echo '<h3 class="cta-sample-text__option-title">Option ' . $option_number . '</h3>';
+				echo '<h3 class="cta-sample-text__option-title">Option ' . esc_html( $option_number ) . '</h3>';
 			}
 
 			echo '<div class="cta-sample-text__body">';
@@ -1038,62 +1048,8 @@ function cta_manager_single_cta_content( $content ) {
 	return $output;
 }
 
-/**
- * Frontend script for Sample Text copy link.
- */
-function cta_manager_sample_text_script() {
-	if ( ! is_singular( 'cta' ) ) {
-		return;
-	}
-	?>
-	<script>
-		(function() {
-			var live = null;
-			function announce(msg) {
-				if (!live) {
-					live = document.createElement('div');
-					live.setAttribute('aria-live', 'polite');
-					live.style.cssText = 'position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0);white-space:nowrap;';
-					document.body.appendChild(live);
-				}
-				live.textContent = '';
-				window.setTimeout(function() { live.textContent = msg; }, 30);
-			}
-
-			function fallbackCopy(ta, done) {
-				ta.focus();
-				ta.select();
-				try {
-					if (document.execCommand('copy')) { done(); }
-				} catch (err) {}
-			}
-
-			document.addEventListener('click', function(e) {
-				var btn = e.target.closest('.cta-sample-text__copy-link');
-				if (!btn) return;
-
-				e.preventDefault();
-				var id = btn.getAttribute('data-target');
-				var ta = document.getElementById(id);
-				if (!ta) return;
-
-				var done = function() {
-					btn.textContent = 'Copied!';
-					announce('Sample text copied to your clipboard.');
-					window.setTimeout(function() { btn.textContent = 'Copy to Clipboard'; }, 1500);
-				};
-
-				if (navigator.clipboard && navigator.clipboard.writeText) {
-					navigator.clipboard.writeText(ta.value).then(done, function() { fallbackCopy(ta, done); });
-				} else {
-					fallbackCopy(ta, done);
-				}
-			});
-		})();
-	</script>
-	<?php
-}
-add_action( 'wp_footer', 'cta_manager_sample_text_script' );
+// The Sample Text copy-to-clipboard script now lives in assets/sample-text.js,
+// enqueued on single CTA pages in CTA_Display::enqueue_front_styles().
 
 /**
  * Render a Guided action as a two-part flow.
@@ -1171,7 +1127,7 @@ function cta_manager_render_guided_action( $post_id, $content = [] ) {
 		echo '<h2 class="cta-section__title cta-section__title--spaced">Why this Matters</h2>';
 		echo '<div class="cta-card cta-card--summary">';
 		echo '<div class="cta-section__body">';
-		echo cta_manager_render_content( $summary );
+		echo cta_manager_render_content( $summary ); // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped -- cta_manager_render_content() returns content escaped with wp_kses_post().
 		echo '</div>';
 		echo '</div>';
 		echo '</section>';
@@ -1344,7 +1300,7 @@ function cta_manager_render_guided_action( $post_id, $content = [] ) {
 			}
 			echo '<div class="cta-step-card cta-step-card--detail">';
 			echo '<div class="cta-step-number cta-step-card__label">Step ' . intval( $sn ) . '</div>';
-			echo '<div class="cta-step-body cta-step-card__body">' . cta_manager_render_content( $step_html ) . '</div>';
+			echo '<div class="cta-step-body cta-step-card__body">' . cta_manager_render_content( $step_html ) . '</div>'; // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped -- cta_manager_render_content() returns content escaped with wp_kses_post().
 			echo '</div>';
 			$sn++;
 		}
@@ -1382,7 +1338,7 @@ function cta_manager_render_guided_action( $post_id, $content = [] ) {
 				}
 				echo '<div class="cta-guided__step">';
 				echo '<span class="cta-guided__step-n" aria-hidden="true">' . intval( $sn ) . '</span>';
-				echo '<div class="cta-guided__step-body">' . cta_manager_render_content( $step_html ) . '</div>';
+				echo '<div class="cta-guided__step-body">' . cta_manager_render_content( $step_html ) . '</div>'; // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped -- cta_manager_render_content() returns content escaped with wp_kses_post().
 				echo '</div>';
 				$sn++;
 			}
