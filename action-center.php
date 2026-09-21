@@ -3,7 +3,7 @@
  * Plugin Name: Fernwood Action Center
  * Plugin URI: https://github.com/steventrotter/action-center
  * Description: Publish and display Calls to Action: an Action Center listing page, per-action detail pages, an embeddable block, a public JSON feed, and AI-assisted CTA creation through the WordPress MCP connector.
- * Version: 1.5.1
+ * Version: 1.5.2
  * Author: Steven Trotter
  * Author URI: https://steventrotter.com
  * License: GPLv2 or later
@@ -13,7 +13,7 @@
 
 defined( 'ABSPATH' ) || exit;
 
-define( 'CTA_MANAGER_VERSION', '1.5.1' );
+define( 'CTA_MANAGER_VERSION', '1.5.2' );
 
 /**
  * Auto-updates from GitHub releases.

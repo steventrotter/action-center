@@ -3,7 +3,7 @@ Contributors: steventrotter
 Tags: nonprofit, advocacy, call to action, petition, activism
 Requires at least: 6.0
 Tested up to: 7.1
-Stable tag: 1.5.1
+Stable tag: 1.5.2
 Requires PHP: 7.4
 License: GPLv2 or later
 License URI: https://www.gnu.org/licenses/gpl-2.0.html
@@ -48,6 +48,9 @@ Yes. Uninstalling (deleting) the plugin removes all CTAs, their tags, and the pl
 No. The feed intentionally exposes your published, active CTAs so partner sites can amplify them. Drafts, expired, and ended CTAs are never included.
 
 == Changelog ==
+
+= 1.5.2 =
+* Fixed: exporting CTAs now produces a clean JSON file. The export ran while the settings page was already rendering, so the download was wrapped in the admin page's HTML; it now runs on admin_init, before any page output.
 
 = 1.5.1 =
 * Changed: the front-end sample-text copy script and the admin deadline and comment-builder scripts are now enqueued from files instead of printed inline, for performance and compatibility.

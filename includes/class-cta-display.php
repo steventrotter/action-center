@@ -59,6 +59,20 @@ class CTA_Display {
 		add_shortcode( 'cta_list', [ $this, 'render_cta_list' ] );
 		add_action( 'wp_enqueue_scripts', [ $this, 'enqueue_front_styles' ] );
 		add_action( 'admin_menu', [ $this, 'add_settings_page' ] );
+		add_action( 'admin_init', [ $this, 'maybe_handle_export' ] );
+	}
+
+	/**
+	 * Run the CTA export on admin_init, before any admin page HTML is output, so the
+	 * download headers are honored and the file is clean JSON rather than the settings
+	 * page markup with the JSON appended.
+	 */
+	public function maybe_handle_export() {
+		if ( isset( $_POST['cta_export'] ) && check_admin_referer( 'cta_export_nonce' ) ) {
+			if ( current_user_can( 'manage_options' ) ) {
+				self::handle_export(); // Sends headers and exits.
+			}
+		}
 	}
 
 	public function enqueue_front_styles() {
@@ -122,11 +136,6 @@ class CTA_Display {
 			$tab = 'settings';
 		}
 		$base_url = admin_url( 'options-general.php?page=action-center-settings' );
-
-		// Export must run before any output so its download headers are honored.
-		if ( isset( $_POST['cta_export'] ) && check_admin_referer( 'cta_export_nonce' ) ) {
-			self::handle_export(); // Sends headers and exits.
-		}
 
 		// Process settings save and import before output; collect notices to show below.
 		$notices = [];
