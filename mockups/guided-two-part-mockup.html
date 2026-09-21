@@ -1,0 +1,338 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Guided CTA - Two-Part Design Mockup</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Lora:wght@500;600;700&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --green:#14503c;
+    --green-dark:#0e3b2c;
+    --on-green:#ffffff;
+    --bg:#f6f5ef;
+    --card:#ffffff;
+    --ink:#22271f;
+    --muted:#6c7268;
+    --line:#e3e1d8;
+    --surface:#f0efe7;
+  }
+  *{box-sizing:border-box;}
+  body{
+    margin:0;background:var(--bg);color:var(--ink);
+    font-family:"Inter",system-ui,-apple-system,Segoe UI,Roboto,sans-serif;
+    line-height:1.6;-webkit-font-smoothing:antialiased;
+  }
+  .wrap{max-width:720px;margin:0 auto;padding:2.5rem 1.25rem 4rem;}
+  h1,h2,h3{font-family:"Lora",Georgia,serif;color:var(--ink);line-height:1.25;}
+  h1{font-size:1.9rem;margin:0 0 .4rem;}
+  h2{font-size:1.3rem;margin:2.2rem 0 .8rem;}
+  h3{font-size:1.05rem;margin:0 0 .4rem;}
+  .deadline{display:inline-block;font-weight:600;font-size:.9rem;color:var(--green-dark);
+    background:var(--surface);border:1px solid var(--line);border-radius:999px;padding:.3rem .8rem;margin-bottom:1.4rem;}
+  .card{background:var(--card);border:1px solid var(--line);border-radius:12px;padding:1.25rem 1.4rem;}
+  .why p{margin:.6rem 0;}
+  .why p:first-child{margin-top:0;}
+  .builder{margin-top:1.4rem;}
+  fieldset{border:0;margin:0 0 1.2rem;padding:0;}
+  legend{font-weight:600;padding:0;margin-bottom:.6rem;font-size:.98rem;}
+  .point{display:flex;gap:.7rem;align-items:flex-start;background:var(--surface);
+    border:1px solid var(--line);border-radius:10px;padding:.8rem .9rem;margin-bottom:.6rem;cursor:pointer;}
+  .point:focus-within{outline:2px solid var(--green);outline-offset:2px;}
+  .point input{margin-top:.25rem;width:1.15rem;height:1.15rem;accent-color:var(--green);flex:0 0 auto;}
+  .point .t{font-size:.94rem;}
+  .point .t b{display:block;}
+  .field{margin-bottom:1rem;}
+  .field label{display:block;font-weight:600;font-size:.9rem;margin-bottom:.35rem;}
+  textarea,input[type=text]{width:100%;font:inherit;color:inherit;background:#fff;
+    border:1px solid #c9c6ba;border-radius:8px;padding:.6rem .7rem;}
+  .prompt{min-height:4.5rem;resize:vertical;}
+  .id{display:grid;grid-template-columns:1fr 1fr;gap:.9rem;}
+  @media(max-width:480px){.id{grid-template-columns:1fr;}}
+  .draftwrap{margin-top:1.3rem;}
+  .draftwrap>label{display:block;font-weight:600;font-size:.9rem;margin-bottom:.35rem;}
+  .draft{min-height:230px;line-height:1.6;resize:vertical;}
+  .tools{display:flex;justify-content:space-between;align-items:center;gap:.75rem;margin-top:.5rem;}
+  .reset{background:none;border:0;padding:0;font:inherit;font-size:.85rem;color:var(--green);text-decoration:underline;cursor:pointer;}
+  .wc{font-size:.8rem;color:var(--muted);}
+  .btn{display:inline-block;background:var(--green);color:var(--on-green);border:1px solid transparent;
+    border-radius:8px;padding:.75em 1.3em;font:inherit;font-weight:600;text-align:center;text-decoration:none;cursor:pointer;transition:background .15s;}
+  .btn:hover{background:var(--green-dark);}
+  .btn--full{display:block;width:100%;font-size:1.02rem;margin-top:1.3rem;}
+  .bgline{margin-top:.9rem;font-size:.85rem;text-align:center;}
+  .bgline a{color:var(--green);}
+  /* collapsed "more information" */
+  .moreinfo{margin-top:1rem;border:1px solid var(--line);border-radius:10px;background:var(--card);overflow:hidden;}
+  .moreinfo>summary{cursor:pointer;list-style:none;padding:.85rem 1.1rem;font-weight:600;font-size:.95rem;
+    display:flex;align-items:center;justify-content:space-between;color:var(--green-dark);}
+  .moreinfo>summary::-webkit-details-marker{display:none;}
+  .moreinfo>summary::after{content:"+";font-size:1.2rem;color:var(--green);line-height:1;}
+  .moreinfo[open]>summary::after{content:"\2013";}
+  .moreinfo[open]>summary{border-bottom:1px solid var(--line);}
+  .moreinfo__body{padding:1.1rem;}
+  .video{position:relative;padding-top:56.25%;border-radius:8px;overflow:hidden;margin-bottom:1rem;background:#000;}
+  .video iframe{position:absolute;inset:0;width:100%;height:100%;border:0;}
+  .links{list-style:none;margin:0;padding:0;}
+  .links li{padding:.4rem 0;border-top:1px solid var(--line);font-size:.9rem;}
+  .links li:first-child{border-top:0;}
+  .links a{color:var(--green);}
+  /* Part 2 */
+  .ready-head{display:flex;align-items:center;gap:.6rem;}
+  .check-badge{flex:0 0 auto;width:2rem;height:2rem;border-radius:999px;background:var(--green);color:#fff;
+    display:grid;place-items:center;font-size:1.1rem;}
+  .final{background:var(--surface);border:1px solid var(--line);border-radius:10px;padding:1rem;
+    white-space:pre-wrap;font-size:.92rem;max-height:220px;overflow:auto;margin:1rem 0;}
+  .more{margin-top:2rem;}
+  .step{display:flex;gap:.8rem;padding:.9rem 0;border-top:1px solid var(--line);}
+  .step:first-of-type{border-top:0;}
+  .step .n{flex:0 0 auto;width:1.6rem;height:1.6rem;border-radius:999px;background:var(--surface);
+    border:1px solid var(--line);display:grid;place-items:center;font-size:.8rem;font-weight:700;color:var(--green-dark);}
+  .step a{color:var(--green);}
+  .backline{margin-top:1.5rem;font-size:.88rem;}
+  .backline button{background:none;border:0;color:var(--green);text-decoration:underline;font:inherit;cursor:pointer;padding:0;}
+  .note{margin-top:2.5rem;padding:.8rem 1rem;border-left:3px solid var(--green);background:#eef2ee;
+    font-size:.82rem;color:#3c4a3f;border-radius:0 6px 6px 0;}
+  .hidden{display:none;}
+  /* view toggle */
+  .viewtoggle{display:inline-flex;background:var(--surface);border:1px solid var(--line);border-radius:999px;padding:.2rem;margin-bottom:1.6rem;}
+  .vt{border:0;background:none;font:inherit;font-weight:600;font-size:.85rem;color:var(--muted);padding:.4rem 1rem;border-radius:999px;cursor:pointer;}
+  .vt.active{background:var(--green);color:#fff;}
+  /* admin mock */
+  .admin-sub{color:var(--muted);margin:.2rem 0 1.4rem;font-size:.9rem;}
+  .adminbox{background:#fff;border:1px solid #dcdcde;border-radius:4px;margin-bottom:1.1rem;box-shadow:0 1px 1px rgba(0,0,0,.04);}
+  .adminbox__title{font-weight:600;font-size:.95rem;padding:.7rem 1rem;border-bottom:1px solid #f0f0f1;font-family:"Inter",sans-serif;}
+  .adminbox__body{padding:1rem;}
+  .adminbox__help{color:var(--muted);font-size:.85rem;margin:0 0 .8rem;border-left:3px solid var(--green);padding-left:.7rem;}
+  .fmt{display:block;padding:.35rem 0;font-size:.92rem;}
+  .fmt input{margin-right:.5rem;accent-color:var(--green);}
+  .stepline{background:var(--surface);border:1px solid var(--line);border-radius:6px;padding:.55rem .7rem;margin-bottom:.5rem;font-size:.88rem;color:#444;}
+  .addstep{background:#fff;border:1px solid var(--green);color:var(--green);border-radius:6px;padding:.4rem .8rem;font:inherit;font-size:.85rem;font-weight:600;cursor:pointer;}
+</style>
+</head>
+<body>
+<div class="wrap">
+
+  <div class="viewtoggle" role="tablist">
+    <button class="vt active" data-view="frontend">What visitors see</button>
+    <button class="vt" data-view="admin">What you see in the admin</button>
+  </div>
+
+  <div id="view-frontend">
+  <!-- ============ PART 1: info + builder ============ -->
+  <div id="part1">
+    <span class="deadline">Deadline: October 6, 2026 at 8:59 PM Pacific</span>
+    <h1>Comment by October 6 to keep the Roadless Rule</h1>
+
+    <section class="card why" aria-label="Why this matters">
+      <h2 style="margin-top:.2rem">Why This Matters</h2>
+      <p>The U.S. Department of Agriculture has filed a proposed rule to rescind the 2001 Roadless Area Conservation Rule in its entirety. Conservation groups call this the last scheduled chance for the public to weigh in before it is finalized.</p>
+      <p>The rule protects about 45 million acres of national forest, nearly 2 million of them in Oregon, including more than 13,000 acres around Mount Hebo in the Siuslaw that nothing else protects. The comment period was extended to Tuesday, October 6. A comment that names a place and says what you do there is far harder to set aside than a form letter.</p>
+    </section>
+
+    <details class="moreinfo">
+      <summary>More information: watch the film, read the proposal</summary>
+      <div class="moreinfo__body">
+        <div class="video">
+          <iframe src="https://www.youtube-nocookie.com/embed/YAH3l0Uzl7k" title="Why We Need the Roadless Rule" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowfullscreen loading="lazy"></iframe>
+        </div>
+        <ul class="links">
+          <li><a href="https://www.fs.usda.gov/managing-land/planning/roadless" target="_blank" rel="noopener">U.S. Forest Service Roadless Areas page &mdash; the agency's hub for this rulemaking</a></li>
+          <li><a href="https://www.federalregister.gov/d/2026-16965" target="_blank" rel="noopener">Federal Register notice &mdash; the proposed rule and draft environmental impact statement</a></li>
+          <li><a href="https://roadless.org/learning" target="_blank" rel="noopener">Roadless.org learning map &mdash; the best single guide to writing a substantive comment</a></li>
+          <li><a href="https://experience.arcgis.com/experience/c6122042b4ae46c9b323306912e8b40e" target="_blank" rel="noopener">Forest Service interactive map of the alternatives</a></li>
+          <li><a href="https://ourpubliclandsandwaters.substack.com/p/forest-service-moves-to-rescind-the" target="_blank" rel="noopener">Our Public Lands and Waters &mdash; a plain-language read on the history and the money</a></li>
+        </ul>
+      </div>
+    </details>
+
+    <section class="builder">
+      <h2>Build Your Comment</h2>
+      <div class="card">
+        <fieldset>
+          <legend>Choose the points that matter to you</legend>
+          <label class="point">
+            <input type="checkbox" class="pt" data-text="The agency calls this wildfire policy, but its own 2020 research found roadless and roaded forests burn at similar rates, and fires are far likelier to start near a road than in roadless forest.">
+            <span class="t"><b>The wildfire rationale does not hold up.</b> The agency calls this wildfire policy, but its own 2020 research found roadless and roaded forests burn at similar rates, and fires are far likelier to start near a road than in roadless forest.</span>
+          </label>
+          <label class="point">
+            <input type="checkbox" class="pt" data-text="About 91 percent of Oregon roadless forest, some 1.66 million acres, sits in municipal watersheds serving roughly 800,000 people, and roads send sediment into the cold streams that marbled murrelets and coho depend on.">
+            <span class="t"><b>This is about our drinking water and fish.</b> About 91 percent of Oregon roadless forest, some 1.66 million acres, sits in municipal watersheds serving roughly 800,000 people, and roads send sediment into the cold streams that marbled murrelets and coho depend on.</span>
+          </label>
+          <label class="point">
+            <input type="checkbox" class="pt" data-text="More than 625,000 comments came in during 2025, a 2026 Pew poll found 76 percent of voters want the rule kept, and the agency faces an 11.2 billion dollar road-maintenance backlog while proposing to build more.">
+            <span class="t"><b>The public already weighed in, and the money runs the other way.</b> More than 625,000 comments came in during 2025, a 2026 Pew poll found 76 percent of voters want the rule kept, and the agency faces an 11.2 billion dollar road-maintenance backlog while proposing to build more.</span>
+          </label>
+        </fieldset>
+
+        <div class="field">
+          <label for="prompt">What is your connection to these forests? Name a place you know, a creek you fish, a trail you walk.</label>
+          <textarea id="prompt" class="prompt"></textarea>
+        </div>
+        <div class="id">
+          <div class="field"><label for="name">Your name</label><input type="text" id="name"></div>
+          <div class="field"><label for="town">Your town</label><input type="text" id="town"></div>
+        </div>
+
+        <div class="draftwrap">
+          <label for="draft">Your draft comment. Edit it freely before you send it: it is yours to change.</label>
+          <textarea id="draft" class="draft"></textarea>
+          <div class="tools">
+            <button type="button" class="reset" id="reset">Reset to suggested wording</button>
+            <span class="wc" id="wc">0 words</span>
+          </div>
+        </div>
+
+        <button type="button" class="btn btn--full" id="go">Copy my comment and open the form</button>
+      </div>
+    </section>
+  </div>
+
+  <!-- ============ PART 2: submit handoff + more ============ -->
+  <div id="part2" class="hidden">
+    <div class="card">
+      <div class="ready-head">
+        <span class="check-badge">&#10003;</span>
+        <h2 style="margin:0">Your comment is copied</h2>
+      </div>
+      <p style="margin:.6rem 0 0">Open the comment form, paste your comment into the box, and click the government's Submit button. That last step happens on regulations.gov, so it only counts if you finish it there.</p>
+      <div class="final" id="final"></div>
+      <a class="btn btn--full" id="openform" href="https://www.regulations.gov/commenton/FS-2025-0001-342438" target="_blank" rel="noopener">Open the comment form to submit</a>
+    </div>
+
+    <section class="more">
+      <h2>More Ways to Help</h2>
+      <div class="card">
+        <div class="step"><span class="n">1</span><div><h3>Comment on the travel management rule by September 23</h3>A separate Forest Service docket that was <b>not</b> extended, and commenting on one does not comment on the other. <a href="#" onclick="return false">Take that action &rarr;</a></div></div>
+        <div class="step"><span class="n">2</span><div><h3>Write to Congress, five minutes</h3>Ask Rep. Val Hoyle to co-sponsor the Roadless Area Conservation Act, and tell both senators to strip the repeal out of S. 140. <a href="#" onclick="return false">Take that action &rarr;</a></div></div>
+        <div class="step"><span class="n">3</span><div><h3>Sign the roadless petitions, two minutes</h3>Cascadia Wildlands and KS Wild are both collecting signatures. <a href="#" onclick="return false">Sign the petitions &rarr;</a></div></div>
+        <div class="step"><span class="n">4</span><div><h3>Spread the word</h3>Send this to your neighbors, bring it up at your next gathering, and consider a letter to your local paper. The extension happened because enough people made noise.</div></div>
+      </div>
+      <p class="backline"><button type="button" id="back">&larr; Back to my comment</button></p>
+    </section>
+  </div>
+
+  </div><!-- /view-frontend -->
+
+  <!-- ============ ADMIN VIEW ============ -->
+  <div id="view-admin" class="hidden">
+    <h1 style="font-size:1.4rem">Edit CTA</h1>
+    <p class="admin-sub">The two boxes that change with the format. Flip the format and watch the Steps box change its meaning.</p>
+
+    <div class="adminbox">
+      <div class="adminbox__title">Action Format</div>
+      <div class="adminbox__body">
+        <label class="fmt"><input type="radio" name="fmt" value="simple"> <b>Simple</b> &mdash; the steps are the action.</label>
+        <label class="fmt"><input type="radio" name="fmt" value="guided" checked> <b>Guided</b> &mdash; a comment builder; the steps become follow-up actions.</label>
+      </div>
+    </div>
+
+    <div class="adminbox">
+      <div class="adminbox__title" id="steps-title">Additional Steps</div>
+      <div class="adminbox__body">
+        <p class="adminbox__help" id="steps-help">Shown on the second screen, after the supporter builds and submits their comment, under &ldquo;More ways to help.&rdquo;</p>
+        <div class="stepline">Comment on the travel management rule by September 23&hellip;</div>
+        <div class="stepline">Write to Congress, five minutes&hellip;</div>
+        <div class="stepline">Sign the roadless petitions, two minutes&hellip;</div>
+        <button class="addstep">+ Add step</button>
+      </div>
+    </div>
+
+    <div class="adminbox" id="guided-only">
+      <div class="adminbox__title">Guided Comment Builder</div>
+      <div class="adminbox__body">
+        <p class="adminbox__help">Talking points, personal prompts, the submission form URL, and the framing lines. Only appears for Guided actions.</p>
+      </div>
+    </div>
+
+    <div class="adminbox">
+      <div class="adminbox__title">Related Videos &amp; Links</div>
+      <div class="adminbox__body">
+        <p class="adminbox__help" id="vl-help">For a Guided action these become the collapsed &ldquo;More information&rdquo; section shown between the summary and the builder, so people can go deeper without it blocking the ask.</p>
+        <div class="stepline">Video: Why We Need the Roadless Rule&hellip;</div>
+        <div class="stepline">Link: Forest Service Roadless Areas page&hellip;</div>
+        <div class="stepline">Link: Roadless.org learning map&hellip;</div>
+      </div>
+    </div>
+  </div>
+
+  <div class="note"><b>Design note (not shown to visitors):</b> No counter banner. The one thing tracked is the click on &ldquo;Open the comment form to submit,&rdquo; reported honestly as comments written, never as confirmed submissions.</div>
+
+</div>
+
+<script>
+  const intro = "I am writing in opposition to the proposed rescission of the 2001 Roadless Area Conservation Rule, docket FS-2025-0001, and to ask the Forest Service to select the no-action alternative.";
+  const closing = "For these reasons I ask the Forest Service to withdraw the proposal and retain the 2001 Roadless Rule. Thank you for considering my comment.";
+  const draft = document.getElementById('draft');
+  const wc = document.getElementById('wc');
+  let dirty = false;
+
+  function assemble(){
+    const parts = [intro];
+    document.querySelectorAll('.pt:checked').forEach(c => parts.push(c.dataset.text));
+    const p = document.getElementById('prompt').value.trim();
+    if(p) parts.push(p);
+    parts.push(closing);
+    const name = document.getElementById('name').value.trim();
+    const town = document.getElementById('town').value.trim();
+    let sig = '';
+    if(name || town){ sig = '\n\nSincerely,\n' + [name, town].filter(Boolean).join('\n'); }
+    return parts.join('\n\n') + sig;
+  }
+  function refresh(){
+    if(!dirty) draft.value = assemble();
+    const n = draft.value.trim() ? draft.value.trim().split(/\s+/).length : 0;
+    wc.textContent = n + (n===1?' word':' words');
+  }
+  document.querySelectorAll('.pt, #prompt, #name, #town').forEach(el=>{
+    el.addEventListener('input', refresh); el.addEventListener('change', refresh);
+  });
+  draft.addEventListener('input', ()=>{ dirty = true; refresh(); });
+  document.getElementById('reset').addEventListener('click', ()=>{ dirty=false; refresh(); });
+
+  document.getElementById('go').addEventListener('click', ()=>{
+    const text = draft.value;
+    if(navigator.clipboard) navigator.clipboard.writeText(text).catch(()=>{});
+    document.getElementById('final').textContent = text;
+    document.getElementById('part1').classList.add('hidden');
+    document.getElementById('part2').classList.remove('hidden');
+    window.scrollTo({top:0, behavior:'smooth'});
+  });
+  document.getElementById('back').addEventListener('click', ()=>{
+    document.getElementById('part2').classList.add('hidden');
+    document.getElementById('part1').classList.remove('hidden');
+    window.scrollTo({top:0, behavior:'smooth'});
+  });
+
+  refresh();
+
+  // view toggle
+  document.querySelectorAll('.vt').forEach(b=>{
+    b.addEventListener('click', ()=>{
+      document.querySelectorAll('.vt').forEach(x=>x.classList.remove('active'));
+      b.classList.add('active');
+      const v = b.dataset.view;
+      document.getElementById('view-frontend').classList.toggle('hidden', v!=='frontend');
+      document.getElementById('view-admin').classList.toggle('hidden', v!=='admin');
+      window.scrollTo({top:0});
+    });
+  });
+
+  // admin: steps box relabels with the format
+  document.querySelectorAll('input[name=fmt]').forEach(r=>{
+    r.addEventListener('change', ()=>{
+      const guided = document.querySelector('input[name=fmt]:checked').value==='guided';
+      document.getElementById('steps-title').textContent = guided ? 'Additional Steps' : 'Steps to Take';
+      document.getElementById('steps-help').textContent = guided
+        ? 'Shown on the second screen, after the supporter builds and submits their comment, under “More ways to help.”'
+        : 'The steps that walk a supporter through the action. For a Simple action, these steps are the action.';
+      document.getElementById('guided-only').classList.toggle('hidden', !guided);
+      document.getElementById('vl-help').textContent = guided
+        ? 'For a Guided action these become the collapsed “More information” section shown between the summary and the builder, so people can go deeper without it blocking the ask.'
+        : 'For a Simple action these show inline on the action page as Related Videos and Related Links.';
+    });
+  });
+</script>
+</body>
+</html>

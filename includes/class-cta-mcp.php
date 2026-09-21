@@ -54,7 +54,7 @@ class CTA_MCP {
 		new \Automattic\WordpressMcp\Core\RegisterMcpTool(
 			[
 				'name'                => 'cta_manager_create_cta',
-				'description'         => 'Create a complete Call to Action (CTA) for the Action Center plugin. Sets the title, every CTA content field (summary, deadline or ongoing flag, steps, sample texts, related links, videos, files, button label, legislator URL) and the Organization / CTA Type taxonomy terms in a single call. Defaults to draft status for review before publishing. Returns the new CTA id and its wp-admin edit URL.',
+				'description'         => 'Create a complete Call to Action (CTA) for the Fernwood Action Center plugin. Sets the title, every CTA content field (summary, deadline or ongoing flag, steps, sample texts, related links, videos, files, button label, legislator URL) and the Organization / CTA Type taxonomy terms in a single call. Defaults to draft status for review before publishing. Returns the new CTA id and its wp-admin edit URL.',
 				'type'                => 'create',
 				'permission_callback' => [ $this, 'permission_callback' ],
 				'callback'            => [ $this, 'create_cta' ],
@@ -132,6 +132,34 @@ class CTA_MCP {
 							'items'       => [ 'type' => 'string' ],
 							'description' => 'CTA Type names (cta_type taxonomy). Terms are created if they do not exist.',
 						],
+						'format'           => [
+							'type'        => 'string',
+							'enum'        => [ 'simple', 'guided' ],
+							'description' => 'Action format. "guided" enables the interactive comment builder; "simple" (default) is the classic display.',
+						],
+						'talking_points'   => [
+							'type'        => 'array',
+							'description' => 'Guided only. Selectable talking points; each { label, text } becomes a checkbox that inserts its paragraph into the draft.',
+							'items'       => [
+								'type'       => 'object',
+								'properties' => [
+									'label' => [ 'type' => 'string' ],
+									'text'  => [ 'type' => 'string' ],
+								],
+								'required'   => [ 'label', 'text' ],
+							],
+						],
+						'personal_prompts' => [
+							'type'        => 'array',
+							'items'       => [ 'type' => 'string' ],
+							'description' => 'Guided only. Free-text prompt questions inviting the supporter to add their own words.',
+						],
+						'guided_intro'     => [ 'type' => 'string', 'description' => 'Guided only. Opening line of the assembled comment.' ],
+						'guided_closing'   => [ 'type' => 'string', 'description' => 'Guided only. Closing line of the assembled comment.' ],
+						'comment_url'      => [ 'type' => 'string', 'description' => 'Guided only. Where the finished comment is submitted (e.g. a Regulations.gov comment form URL).' ],
+						'agency'           => [ 'type' => 'string', 'description' => 'Guided only. Agency name shown on the action (e.g. "USDA Forest Service").' ],
+						'docket'           => [ 'type' => 'string', 'description' => 'Guided only. Docket identifier shown on the action (e.g. "FS-2025-0001").' ],
+						'comment_goal'     => [ 'type' => 'integer', 'description' => 'Guided only. Target number of comments for the progress meter.' ],
 					],
 					'required'   => [ 'title' ],
 				],
@@ -172,6 +200,16 @@ class CTA_MCP {
 			? $args['status']
 			: 'draft';
 
+		// Security: the tool's permission_callback only requires edit_posts, which
+		// Contributors have. wp_insert_post does not enforce publish_posts, so without
+		// this a Contributor could publish a CTA live. Downgrade to draft unless the
+		// user actually holds the publish capability for this post type.
+		$post_type_obj = get_post_type_object( 'cta' );
+		if ( in_array( $status, [ 'publish', 'pending' ], true )
+			&& ( ! $post_type_obj || ! current_user_can( $post_type_obj->cap->publish_posts ) ) ) {
+			$status = 'draft';
+		}
+
 		$post_id = wp_insert_post(
 			[
 				'post_type'   => 'cta',
@@ -196,7 +234,7 @@ class CTA_MCP {
 			update_post_meta( $post_id, '_cta_button_text', sanitize_text_field( $args['button_text'] ) );
 		}
 		if ( ! empty( $args['legislator_url'] ) ) {
-			update_post_meta( $post_id, '_cta_legislator_url', sanitize_text_field( $args['legislator_url'] ) );
+			update_post_meta( $post_id, '_cta_legislator_url', esc_url_raw( $args['legislator_url'] ) );
 		}
 
 		// Deadline vs ongoing. Ongoing wins and clears any deadline.
@@ -228,6 +266,35 @@ class CTA_MCP {
 		}
 		if ( isset( $args['sample_texts'] ) && is_array( $args['sample_texts'] ) ) {
 			update_post_meta( $post_id, '_cta_sample_texts', $args['sample_texts'] );
+		}
+
+		// Guided (comment builder) fields. Registered sanitize_callbacks re-clean on write.
+		if ( isset( $args['format'] ) ) {
+			update_post_meta( $post_id, '_cta_format', $args['format'] );
+		}
+		if ( isset( $args['talking_points'] ) && is_array( $args['talking_points'] ) ) {
+			update_post_meta( $post_id, '_cta_talking_points', $args['talking_points'] );
+		}
+		if ( isset( $args['personal_prompts'] ) && is_array( $args['personal_prompts'] ) ) {
+			update_post_meta( $post_id, '_cta_personal_prompts', $args['personal_prompts'] );
+		}
+		if ( isset( $args['guided_intro'] ) ) {
+			update_post_meta( $post_id, '_cta_guided_intro', sanitize_textarea_field( $args['guided_intro'] ) );
+		}
+		if ( isset( $args['guided_closing'] ) ) {
+			update_post_meta( $post_id, '_cta_guided_closing', sanitize_textarea_field( $args['guided_closing'] ) );
+		}
+		if ( ! empty( $args['comment_url'] ) ) {
+			update_post_meta( $post_id, '_cta_comment_url', esc_url_raw( $args['comment_url'] ) );
+		}
+		if ( isset( $args['agency'] ) ) {
+			update_post_meta( $post_id, '_cta_agency', sanitize_text_field( $args['agency'] ) );
+		}
+		if ( isset( $args['docket'] ) ) {
+			update_post_meta( $post_id, '_cta_docket', sanitize_text_field( $args['docket'] ) );
+		}
+		if ( isset( $args['comment_goal'] ) ) {
+			update_post_meta( $post_id, '_cta_comment_goal', absint( $args['comment_goal'] ) );
 		}
 
 		// Taxonomies. wp_set_object_terms creates missing terms when passed names.

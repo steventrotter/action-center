@@ -16,10 +16,12 @@
  *   ?type=, ?org= (taxonomy slugs), ?full=1.
  * - ?full=1 adds a `content` object per item carrying the body a detail
  *   screen needs: summary_html, steps, sample_texts, links, videos and
- *   button_text. Added 1.2.0 for native app clients, which cannot reach
- *   `_cta_*` post meta over core REST because it is protected and anonymous
- *   readers get an empty meta object. Everything in `content` is already
- *   public on the CTA's own detail page, so this exposes nothing new.
+ *   button_text, plus a `guided` block when the action is a guided comment
+ *   builder. Added 1.2.0 as a convenience so a consumer gets the whole action
+ *   in one already-shaped, normalized call instead of assembling it from several
+ *   core-REST meta reads (the `_cta_*` keys are show_in_rest and readable there
+ *   for published CTAs; this is shape, not a privacy boundary). Everything in
+ *   `content` is already public on the CTA's own detail page.
  * - `modified` is the post's last-modified time in UTC. A poller comparing it
  *   against what it saw last can tell a newly published action from an edited
  *   one without keeping a copy of the whole payload.
@@ -264,6 +266,8 @@ class CTA_Feed {
 			'date'     => get_the_date( 'Y-m-d', $post ),
 			// UTC, so a poller can compare without knowing the site's timezone.
 			'modified' => get_post_modified_time( 'Y-m-d\TH:i:s\Z', true, $post ),
+			// Action format: 'guided' actions carry an interactive comment builder.
+			'format'   => ( 'guided' === get_post_meta( $post->ID, '_cta_format', true ) ) ? 'guided' : 'simple',
 		];
 
 		// Expires: date portion of the stored datetime-local string ("2026-07-15T17:00").
@@ -350,15 +354,71 @@ class CTA_Feed {
 		}
 
 		$button_text = trim( (string) get_post_meta( $post->ID, '_cta_button_text', true ) );
+		$format      = ( 'guided' === get_post_meta( $post->ID, '_cta_format', true ) ) ? 'guided' : 'simple';
 
-		return [
+		$content = [
 			'summary_html' => $summary_html,
 			'steps'        => $steps,
 			'sample_texts' => $sample_texts,
 			'links'        => $this->url_label_pairs( $post->ID, '_cta_links' ),
 			'videos'       => $this->url_label_pairs( $post->ID, '_cta_videos' ),
 			'button_text'  => '' !== $button_text ? $button_text : __( 'Learn More', 'action-center' ),
+			'format'       => $format,
 		];
+
+		if ( 'guided' === $format ) {
+			$points = [];
+			foreach ( $this->meta_array( $post->ID, '_cta_talking_points' ) as $p ) {
+				if ( ! is_array( $p ) ) {
+					continue;
+				}
+				$points[] = [
+					'label' => isset( $p['label'] ) ? wp_strip_all_tags( (string) $p['label'] ) : '',
+					'text'  => isset( $p['text'] ) ? wp_strip_all_tags( (string) $p['text'] ) : '',
+				];
+			}
+			$prompts = [];
+			foreach ( $this->meta_array( $post->ID, '_cta_personal_prompts' ) as $pr ) {
+				$pr = is_string( $pr ) ? trim( $pr ) : '';
+				if ( '' !== $pr ) {
+					$prompts[] = $pr;
+				}
+			}
+			// Resolve the effective character limit and identity setting: a per-CTA
+			// override falls back to the site default.
+			$default_limit = (int) get_option( 'cta_manager_default_char_limit', 5000 );
+			if ( 'custom' === get_post_meta( $post->ID, '_cta_char_limit_mode', true ) ) {
+				$cl              = get_post_meta( $post->ID, '_cta_char_limit', true );
+				$eff_char_limit  = ( '' === $cl ) ? $default_limit : (int) $cl;
+			} else {
+				$eff_char_limit = $default_limit;
+			}
+			$identity_mode = get_post_meta( $post->ID, '_cta_collect_identity', true );
+			if ( 'on' === $identity_mode ) {
+				$eff_identity = true;
+			} elseif ( 'off' === $identity_mode ) {
+				$eff_identity = false;
+			} else {
+				$eff_identity = (bool) (int) get_option( 'cta_manager_collect_identity', 1 );
+			}
+			$content['guided'] = [
+				'talking_points'   => $points,
+				'personal_prompts' => $prompts,
+				'intro'            => (string) get_post_meta( $post->ID, '_cta_guided_intro', true ),
+				'closing'          => (string) get_post_meta( $post->ID, '_cta_guided_closing', true ),
+				'comment_url'      => (string) get_post_meta( $post->ID, '_cta_comment_url', true ),
+				'char_limit'       => $eff_char_limit,
+				'collect_identity' => $eff_identity,
+				'agency'           => (string) get_post_meta( $post->ID, '_cta_agency', true ),
+				'docket'           => (string) get_post_meta( $post->ID, '_cta_docket', true ),
+				'goal'             => (int) get_post_meta( $post->ID, '_cta_comment_goal', true ),
+				'builds'           => (int) get_post_meta( $post->ID, '_cta_builds', true ),
+				'confirmed'        => (int) get_post_meta( $post->ID, '_cta_confirmed', true ),
+				'show_counter'     => (bool) get_post_meta( $post->ID, '_cta_show_counter', true ),
+			];
+		}
+
+		return $content;
 	}
 
 	/**

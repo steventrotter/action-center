@@ -28,15 +28,15 @@ class CTA_Blocks {
 			'cta-manager-upcoming-ctas-editor-script',
 			plugin_dir_url( __FILE__ ) . '../blocks/upcoming-ctas/block.js',
 			[ 'wp-blocks', 'wp-element', 'wp-editor', 'wp-components', 'wp-i18n', 'wp-block-editor', 'wp-server-side-render' ],
-			'1.0.0'
+			CTA_MANAGER_VERSION
 		);
 
-		// Register block style
+		// Register block style.
 		wp_register_style(
 			'cta-manager-upcoming-ctas-style',
 			plugin_dir_url( __FILE__ ) . '../blocks/upcoming-ctas/block.css',
 			[],
-			'1.0.0'
+			CTA_MANAGER_VERSION
 		);
 
 		register_block_type(
@@ -230,7 +230,7 @@ class CTA_Blocks {
 
 		echo '<div class="cta-upcoming-block">';
 		echo '<header class="cta-upcoming-block__header">';
-		echo '<h3 class="cta-upcoming-block__title">📢 Actions Needed</h3>';
+		echo '<h3 class="cta-upcoming-block__title">Actions Needed</h3>';
 		echo '</header>';
 
 		if ( ! empty( $posts_to_show ) ) {
@@ -264,7 +264,7 @@ class CTA_Blocks {
 					}
 				}
 
-				echo '<a class="cta-upcoming-card__button" href="' . esc_url( get_permalink( $post->ID ) ) . '">' . esc_html( $button_text ) . ' →</a>';
+				echo '<a class="cta-upcoming-card__link" href="' . esc_url( get_permalink( $post->ID ) ) . '">' . esc_html( $button_text ) . ' <span class="cta-upcoming-card__arrow" aria-hidden="true">&rarr;</span></a>';
 				echo '</article>';
 			}
 
@@ -276,7 +276,7 @@ class CTA_Blocks {
 			if ( $has_more ) {
 				$action_center_url = cta_manager_action_center_url();
 				echo '<div class="cta-upcoming-block__view-more-wrap">';
-				echo '<a class="cta-upcoming-block__view-more-btn" href="' . esc_url( $action_center_url ) . '">View More Actions &rarr;</a>';
+				echo '<a class="cta-btn cta-upcoming-block__view-more-btn" href="' . esc_url( $action_center_url ) . '">View More Actions</a>';
 				echo '</div>';
 			}
 		} else {

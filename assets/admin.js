@@ -258,6 +258,68 @@
 		});
 	}
 
+	// -------- Action Format: reconfigure the form when Simple/Guided changes --------
+
+	function initFormatToggle() {
+		var $sel = $('#cta_format');
+		if (!$sel.length) {
+			return;
+		}
+		var $guided = $('#cta_guided_box');
+		var $sample = $('#cta_sample_text_box');
+		var $stepsTitle = $('#cta_steps_box').find('.hndle, .postbox-header .hndle, h2.hndle').first();
+		var $stepsHelp = $('#cta-steps-help');
+
+		function sync() {
+			var isGuided = $sel.val() === 'guided';
+			$guided.toggle(isGuided);
+			// Guided replaces the static Sample Text step, so hide it in Guided mode.
+			$sample.toggle(!isGuided);
+
+			// The Steps box means different things in each format.
+			if ($stepsTitle.length) {
+				$stepsTitle.text(isGuided ? 'Additional Steps (after submitting)' : 'Steps to Take');
+			}
+			if ($stepsHelp.length) {
+				$stepsHelp.text(isGuided
+					? 'For a Guided action, these show on the second screen after the supporter builds and submits their comment, under "More Ways to Help." Leave blank for none.'
+					: 'For a Simple action, these steps are the action: they walk a supporter through what to do.');
+			}
+		}
+
+		$sel.on('change', sync);
+		sync();
+	}
+
+	// -------- Legislator URL: only when the Contact Your Legislator type is chosen --------
+
+	function initLegislatorToggle() {
+		var $box = $('#cta_legislator_box');
+		if (!$box.length) {
+			return;
+		}
+		var $list = $('#cta_typechecklist');
+
+		function isTypeChecked(name) {
+			var found = false;
+			$list.find('label').each(function () {
+				if ($.trim($(this).text()).toLowerCase() === name) {
+					if ($(this).find('input[type="checkbox"]').prop('checked')) {
+						found = true;
+					}
+				}
+			});
+			return found;
+		}
+
+		function sync() {
+			$box.toggle(isTypeChecked('contact your legislator'));
+		}
+
+		$list.on('change', 'input[type="checkbox"]', sync);
+		sync();
+	}
+
 	// -------- Before form submit: sync all TinyMCE editors --------
 
 	function syncAllEditors() {
@@ -272,6 +334,8 @@
 		initFilesField();
 		initVideosRepeater();
 		initSampleTextsRepeater();
+		initFormatToggle();
+		initLegislatorToggle();
 
 		$('form#post').on('submit', function() {
 			syncAllEditors();

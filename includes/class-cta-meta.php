@@ -18,6 +18,31 @@ class CTA_Meta {
 		add_action( 'save_post_cta', [ $this, 'save_meta_data' ] );
 		add_action( 'admin_enqueue_scripts', [ $this, 'enqueue_scripts' ] );
 		add_action( 'admin_notices', [ $this, 'admin_version_banner' ] );
+		add_filter( 'get_user_option_closedpostboxes_cta', [ $this, 'default_collapsed_boxes' ] );
+	}
+
+	/**
+	 * Collapse the CTA content meta boxes by default so the edit screen opens calm
+	 * rather than as a wall of open panels. Applies only until the user sets their
+	 * own open/closed state, which WordPress then stores and this no longer overrides.
+	 *
+	 * @param mixed $closed Stored closed-box list, or false when the user has none.
+	 * @return array
+	 */
+	public function default_collapsed_boxes( $closed ) {
+		if ( false !== $closed ) {
+			return $closed;
+		}
+		// Summary stays open; the rest collapse so the screen opens calm.
+		return [
+			'cta_dates_box',
+			'cta_guided_box',
+			'cta_links_box',
+			'cta_files_box',
+			'cta_steps_box',
+			'cta_sample_text_box',
+			'cta_videos_box',
+		];
 	}
 
 	public function register_post_type() {
@@ -150,7 +175,7 @@ class CTA_Meta {
 			'single'            => true,
 			'show_in_rest'      => true,
 			'auth_callback'     => $can_edit,
-			'sanitize_callback' => 'sanitize_text_field',
+			'sanitize_callback' => 'esc_url_raw',
 		] );
 		register_post_meta( 'cta', '_cta_button_text', [
 			'type'              => 'string',
@@ -227,6 +252,189 @@ class CTA_Meta {
 			'sanitize_callback' => [ $this, 'sanitize_sample_texts' ],
 			'show_in_rest'      => [ 'schema' => $string_list_schema ],
 		] );
+
+		// Action format: 'simple' (classic display) or 'guided' (comment builder).
+		register_post_meta( 'cta', '_cta_format', [
+			'type'              => 'string',
+			'single'            => true,
+			'default'           => 'simple',
+			'show_in_rest'      => true,
+			'auth_callback'     => $can_edit,
+			'sanitize_callback' => [ $this, 'sanitize_format' ],
+		] );
+
+		// Guided: talking points the supporter can select. Each is { label, text }.
+		register_post_meta( 'cta', '_cta_talking_points', [
+			'type'              => 'array',
+			'single'            => true,
+			'auth_callback'     => $can_edit,
+			'sanitize_callback' => [ $this, 'sanitize_talking_points' ],
+			'show_in_rest'      => [
+				'schema' => [
+					'type'  => 'array',
+					'items' => [
+						'type'                 => 'object',
+						'additionalProperties' => false,
+						'properties'           => [
+							'label' => [ 'type' => 'string' ],
+							'text'  => [ 'type' => 'string' ],
+						],
+					],
+				],
+			],
+		] );
+
+		// Guided: personal prompt questions shown as free-text fields.
+		register_post_meta( 'cta', '_cta_personal_prompts', [
+			'type'              => 'array',
+			'single'            => true,
+			'auth_callback'     => $can_edit,
+			'sanitize_callback' => [ $this, 'sanitize_sample_texts' ],
+			'show_in_rest'      => [ 'schema' => $string_list_schema ],
+		] );
+
+		// Guided: the intro line and closing line that bracket the assembled comment.
+		register_post_meta( 'cta', '_cta_guided_intro', [
+			'type'              => 'string',
+			'single'            => true,
+			'show_in_rest'      => true,
+			'auth_callback'     => $can_edit,
+			'sanitize_callback' => 'sanitize_textarea_field',
+		] );
+		register_post_meta( 'cta', '_cta_guided_closing', [
+			'type'              => 'string',
+			'single'            => true,
+			'show_in_rest'      => true,
+			'auth_callback'     => $can_edit,
+			'sanitize_callback' => 'sanitize_textarea_field',
+		] );
+
+		// Guided: where the finished comment is submitted, plus context and goal.
+		register_post_meta( 'cta', '_cta_comment_url', [
+			'type'              => 'string',
+			'single'            => true,
+			'show_in_rest'      => true,
+			'auth_callback'     => $can_edit,
+			'sanitize_callback' => 'esc_url_raw',
+		] );
+
+		// Guided: character limit override. Mode 'default' follows the site setting;
+		// 'custom' uses _cta_char_limit (counted like the government form; 0 = no limit).
+		register_post_meta( 'cta', '_cta_char_limit_mode', [
+			'type'              => 'string',
+			'single'            => true,
+			'default'           => 'default',
+			'show_in_rest'      => true,
+			'auth_callback'     => $can_edit,
+			'sanitize_callback' => function ( $v ) {
+				return in_array( $v, [ 'default', 'custom' ], true ) ? $v : 'default';
+			},
+		] );
+		register_post_meta( 'cta', '_cta_char_limit', [
+			'type'              => 'integer',
+			'single'            => true,
+			'default'           => 5000,
+			'show_in_rest'      => true,
+			'auth_callback'     => $can_edit,
+			'sanitize_callback' => 'absint',
+		] );
+
+		// Guided: identity-fields override. 'default' follows the site setting;
+		// 'on' asks for name/city/state and adds them to the comment; 'off' does not.
+		register_post_meta( 'cta', '_cta_collect_identity', [
+			'type'              => 'string',
+			'single'            => true,
+			'default'           => 'default',
+			'show_in_rest'      => true,
+			'auth_callback'     => $can_edit,
+			'sanitize_callback' => function ( $v ) {
+				return in_array( $v, [ 'default', 'on', 'off' ], true ) ? $v : 'default';
+			},
+		] );
+		register_post_meta( 'cta', '_cta_agency', [
+			'type'              => 'string',
+			'single'            => true,
+			'show_in_rest'      => true,
+			'auth_callback'     => $can_edit,
+			'sanitize_callback' => 'sanitize_text_field',
+		] );
+		register_post_meta( 'cta', '_cta_docket', [
+			'type'              => 'string',
+			'single'            => true,
+			'show_in_rest'      => true,
+			'auth_callback'     => $can_edit,
+			'sanitize_callback' => 'sanitize_text_field',
+		] );
+		register_post_meta( 'cta', '_cta_comment_goal', [
+			'type'              => 'integer',
+			'single'            => true,
+			'show_in_rest'      => true,
+			'auth_callback'     => $can_edit,
+			'sanitize_callback' => 'absint',
+		] );
+
+		// Guided: whether to show the public "comments written" counter on this action.
+		// Off by default; enabled per CTA.
+		register_post_meta( 'cta', '_cta_show_counter', [
+			'type'              => 'boolean',
+			'single'            => true,
+			'default'           => false,
+			'show_in_rest'      => true,
+			'auth_callback'     => $can_edit,
+			'sanitize_callback' => function ( $v ) {
+				return $v ? 1 : 0;
+			},
+		] );
+
+		// Guided: soft engagement counters. Written by the public tracking route,
+		// readable in REST but never writable through it (auth_callback denies).
+		$deny_rest_write = function () {
+			return false;
+		};
+		register_post_meta( 'cta', '_cta_builds', [
+			'type'              => 'integer',
+			'single'            => true,
+			'default'           => 0,
+			'show_in_rest'      => true,
+			'auth_callback'     => $deny_rest_write,
+			'sanitize_callback' => 'absint',
+		] );
+		register_post_meta( 'cta', '_cta_confirmed', [
+			'type'              => 'integer',
+			'single'            => true,
+			'default'           => 0,
+			'show_in_rest'      => true,
+			'auth_callback'     => $deny_rest_write,
+			'sanitize_callback' => 'absint',
+		] );
+	}
+
+	/** Sanitize the action format to a known value. */
+	public function sanitize_format( $value ) {
+		return in_array( $value, [ 'simple', 'guided' ], true ) ? $value : 'simple';
+	}
+
+	/** Sanitize a list of { label, text } talking points (text may contain inline HTML). */
+	public function sanitize_talking_points( $value ) {
+		if ( ! is_array( $value ) ) {
+			return [];
+		}
+		$out = [];
+		foreach ( $value as $item ) {
+			if ( ! is_array( $item ) ) {
+				continue;
+			}
+			$label = isset( $item['label'] ) ? sanitize_text_field( $item['label'] ) : '';
+			$text  = isset( $item['text'] ) ? wp_kses_post( $item['text'] ) : '';
+			if ( '' === $label && '' === $text ) {
+				continue;
+			}
+			$out[] = [
+				'label' => $label,
+				'text'  => $text,
+			];
+		}
+		return array_values( $out );
 	}
 
 	/** Sanitize a list of { url, label } pairs (used by _cta_links and _cta_videos). */
@@ -239,7 +447,7 @@ class CTA_Meta {
 			if ( ! is_array( $item ) ) {
 				continue;
 			}
-			$url = isset( $item['url'] ) ? sanitize_text_field( $item['url'] ) : '';
+			$url = isset( $item['url'] ) ? esc_url_raw( $item['url'] ) : '';
 			if ( '' === $url ) {
 				continue;
 			}
@@ -294,6 +502,15 @@ class CTA_Meta {
 	public function add_meta_boxes() {
 
 		add_meta_box(
+			'cta_format_box',
+			'Action Format',
+			[ $this, 'render_format_box' ],
+			'cta',
+			'side',
+			'high'
+		);
+
+		add_meta_box(
 			'cta_summary_box',
 			'Summary',
 			[ $this, 'render_summary_box' ],
@@ -306,6 +523,15 @@ class CTA_Meta {
 			'cta_dates_box',
 			'Deadline',
 			[ $this, 'render_dates_box' ],
+			'cta',
+			'normal',
+			'default'
+		);
+
+		add_meta_box(
+			'cta_guided_box',
+			'Guided Comment Builder',
+			[ $this, 'render_guided_box' ],
 			'cta',
 			'normal',
 			'default'
@@ -389,7 +615,14 @@ class CTA_Meta {
 		remove_meta_box( 'tagsdiv-post_tag', 'cta', 'side' );
 	}
 
-	public function enqueue_scripts() {
+	public function enqueue_scripts( $hook = '' ) {
+		if ( 'post.php' !== $hook && 'post-new.php' !== $hook ) {
+			return;
+		}
+		$screen = get_current_screen();
+		if ( ! $screen || 'cta' !== $screen->post_type ) {
+			return;
+		}
 		wp_enqueue_editor();
 	}
 
@@ -542,6 +775,11 @@ class CTA_Meta {
 			$steps = [ '' ];
 		}
 
+		// This help text is rewritten by admin.js to match the chosen Action Format:
+		// for Simple the steps are the action; for Guided they become follow-up actions
+		// shown after the supporter submits their comment.
+		echo '<p class="description" id="cta-steps-help">For a Simple action, these steps are the action: they walk a supporter through what to do.</p>';
+
 		echo '<div id="cta-steps-wrapper">';
 
 		$index = 0;
@@ -641,9 +879,134 @@ class CTA_Meta {
 		echo '<p class="description">Leave empty to use the default "Learn More".</p>';
 	}
 
+	public function render_format_box( $post ) {
+		$format = get_post_meta( $post->ID, '_cta_format', true );
+		if ( ! in_array( $format, [ 'simple', 'guided' ], true ) ) {
+			$format = 'simple';
+		}
+		echo '<p><label for="cta_format"><strong>How this action behaves</strong></label></p>';
+		echo '<select name="cta_format" id="cta_format" style="width:100%;">';
+		echo '<option value="simple"' . selected( $format, 'simple', false ) . '>Simple (classic display)</option>';
+		echo '<option value="guided"' . selected( $format, 'guided', false ) . '>Guided (comment builder)</option>';
+		echo '</select>';
+		echo '<p class="description">Simple shows the summary, steps, and sample text as usual. Guided adds an interactive builder that helps supporters compose and edit a comment, then hands off to submit. Choosing Guided reveals the Guided Comment Builder fields and hides Sample Text Options.</p>';
+	}
+
+	public function render_guided_box( $post ) {
+		$points  = get_post_meta( $post->ID, '_cta_talking_points', true );
+		$prompts = get_post_meta( $post->ID, '_cta_personal_prompts', true );
+		$intro   = get_post_meta( $post->ID, '_cta_guided_intro', true );
+		$closing = get_post_meta( $post->ID, '_cta_guided_closing', true );
+		$url     = get_post_meta( $post->ID, '_cta_comment_url', true );
+		$char_limit_mode = get_post_meta( $post->ID, '_cta_char_limit_mode', true );
+		$char_limit_mode = in_array( $char_limit_mode, [ 'default', 'custom' ], true ) ? $char_limit_mode : 'default';
+		$char_limit = get_post_meta( $post->ID, '_cta_char_limit', true );
+		$char_limit = ( '' === $char_limit ) ? 5000 : (int) $char_limit;
+		$identity_mode = get_post_meta( $post->ID, '_cta_collect_identity', true );
+		$identity_mode = in_array( $identity_mode, [ 'default', 'on', 'off' ], true ) ? $identity_mode : 'default';
+		$agency  = get_post_meta( $post->ID, '_cta_agency', true );
+		$docket  = get_post_meta( $post->ID, '_cta_docket', true );
+		$goal    = (int) get_post_meta( $post->ID, '_cta_comment_goal', true );
+		$show_counter = (bool) get_post_meta( $post->ID, '_cta_show_counter', true );
+
+		if ( ! is_array( $points ) || empty( $points ) ) {
+			$points = [ [ 'label' => '', 'text' => '' ] ];
+		}
+		if ( ! is_array( $prompts ) || empty( $prompts ) ) {
+			$prompts = [ '' ];
+		}
+
+		echo '<p class="description">These fields build the interactive comment tool for supporters. Talking points become checkboxes that assemble into a draft the supporter can edit; personal prompts are their own free-text fields.</p>';
+
+		// Talking points.
+		echo '<h4 style="margin-bottom:0.25rem;">Talking Points</h4>';
+		echo '<div id="cta-tp-wrapper" class="cta-sortable-wrapper">';
+		foreach ( $points as $point ) {
+			$label = is_array( $point ) ? ( $point['label'] ?? '' ) : '';
+			$text  = is_array( $point ) ? ( $point['text'] ?? '' ) : '';
+			$this->render_tp_row( $label, $text );
+		}
+		echo '</div>';
+		echo '<p><button type="button" class="button" id="cta-add-tp">Add Talking Point</button></p>';
+
+		// Personal prompts.
+		echo '<h4 style="margin-bottom:0.25rem;">Personal Prompts</h4>';
+		echo '<p class="description" style="margin-top:0;">Questions that invite the supporter to add their own words (for example, "Why does this place matter to you?").</p>';
+		echo '<div id="cta-pp-wrapper">';
+		foreach ( $prompts as $prompt ) {
+			echo '<div class="cta-pp-row" style="margin-bottom:0.5rem;">';
+			echo '<input type="text" name="cta_personal_prompts[]" value="' . esc_attr( $prompt ) . '" style="width:calc(100% - 90px);" placeholder="Why does this place matter to you?">';
+			echo ' <button type="button" class="button cta-remove-pp">Remove</button>';
+			echo '</div>';
+		}
+		echo '</div>';
+		echo '<p><button type="button" class="button" id="cta-add-pp">Add Prompt</button></p>';
+
+		// Framing + submission.
+		echo '<h4 style="margin-bottom:0.25rem;">Comment Framing</h4>';
+		echo '<p><label>Opening line<br><textarea name="cta_guided_intro" rows="2" style="width:100%;" placeholder="I am writing to urge you to...">' . esc_textarea( $intro ) . '</textarea></label></p>';
+		echo '<p><label>Closing line<br><textarea name="cta_guided_closing" rows="2" style="width:100%;" placeholder="Thank you for considering my comment.">' . esc_textarea( $closing ) . '</textarea></label></p>';
+
+		echo '<h4 style="margin-bottom:0.25rem;">Submission &amp; Goal</h4>';
+		echo '<p><label>Where the comment is submitted (URL)<br><input type="url" name="cta_comment_url" value="' . esc_attr( $url ) . '" style="width:100%;" placeholder="https://www.regulations.gov/commenton/..."></label></p>';
+		echo '<p style="display:flex;gap:1rem;flex-wrap:wrap;align-items:flex-end;">';
+		echo '<label style="flex:0 0 auto;">Comment character limit<br><select name="cta_char_limit_mode">';
+		echo '<option value="default"' . selected( $char_limit_mode, 'default', false ) . '>Use site default</option>';
+		echo '<option value="custom"' . selected( $char_limit_mode, 'custom', false ) . '>Custom</option>';
+		echo '</select></label>';
+		echo '<label style="flex:0 0 auto;">Custom limit<br><input type="number" name="cta_char_limit" value="' . esc_attr( $char_limit ) . '" min="0" step="100" style="width:130px;"></label>';
+		echo '</p>';
+		echo '<p class="description" style="margin-top:0;">Counted the way the government form counts them (regulations.gov allows 5000). "Use site default" follows Settings; "Custom" uses the number here. The builder shows a live character count and will not hand off a longer comment. Set the custom limit to 0 for no limit.</p>';
+		echo '<p><label>Ask for name, city, and state<br><select name="cta_collect_identity">';
+		echo '<option value="default"' . selected( $identity_mode, 'default', false ) . '>Use site default</option>';
+		echo '<option value="on"' . selected( $identity_mode, 'on', false ) . '>Yes - add to the comment</option>';
+		echo '<option value="off"' . selected( $identity_mode, 'off', false ) . '>No - keep the comment anonymous</option>';
+		echo '</select></label></p>';
+		echo '<p class="description" style="margin-top:0;">Federal comments (regulations.gov) become public record, so most keep this off and let supporters enter contact details on the form itself. A local action that needs a name and place can turn it on. "Use site default" follows Settings.</p>';
+		echo '<p style="display:flex;gap:1rem;flex-wrap:wrap;">';
+		echo '<label style="flex:1;min-width:150px;">Agency<br><input type="text" name="cta_agency" value="' . esc_attr( $agency ) . '" style="width:100%;" placeholder="USDA Forest Service"></label>';
+		echo '<label style="flex:1;min-width:150px;">Docket<br><input type="text" name="cta_docket" value="' . esc_attr( $docket ) . '" style="width:100%;" placeholder="FS-2025-0001"></label>';
+		echo '<label style="flex:1;min-width:100px;">Goal<br><input type="number" name="cta_comment_goal" value="' . esc_attr( $goal ? $goal : '' ) . '" min="0" style="width:100%;" placeholder="500"></label>';
+		echo '</p>';
+		echo '<p><label><input type="checkbox" name="cta_show_counter" value="1"' . checked( $show_counter, true, false ) . '> Show a public counter of comments written on this action</label></p>';
+		echo '<p class="description" style="margin-top:0;">Off by default. When on, the action shows a running "comments written" count (and a goal meter if a goal is set). It counts each supporter who clicks through to the submission form; it is not a count of verified submissions.</p>';
+
+		// Row template + add/remove behavior.
+		echo '<template id="cta-tp-template">';
+		$this->render_tp_row( '', '' );
+		echo '</template>';
+		echo '<script>
+			(function(){
+				var tpWrap = document.getElementById("cta-tp-wrapper");
+				var tpTpl  = document.getElementById("cta-tp-template");
+				var addTp  = document.getElementById("cta-add-tp");
+				if(addTp){ addTp.addEventListener("click", function(){ tpWrap.insertAdjacentHTML("beforeend", tpTpl.innerHTML); }); }
+				if(tpWrap){ tpWrap.addEventListener("click", function(e){ if(e.target.classList.contains("cta-remove-tp")){ var r=e.target.closest(".cta-tp-row"); if(r) r.remove(); } }); }
+				var ppWrap = document.getElementById("cta-pp-wrapper");
+				var addPp  = document.getElementById("cta-add-pp");
+				if(addPp){ addPp.addEventListener("click", function(){
+					var d=document.createElement("div"); d.className="cta-pp-row"; d.style.marginBottom="0.5rem";
+					d.innerHTML = \'<input type="text" name="cta_personal_prompts[]" value="" style="width:calc(100% - 90px);" placeholder="Why does this place matter to you?"> <button type="button" class="button cta-remove-pp">Remove</button>\';
+					ppWrap.appendChild(d);
+				}); }
+				if(ppWrap){ ppWrap.addEventListener("click", function(e){ if(e.target.classList.contains("cta-remove-pp")){ var r=e.target.closest(".cta-pp-row"); if(r) r.remove(); } }); }
+			})();
+		</script>';
+	}
+
+	/** Render a single talking-point editor row (used for existing rows and the JS template). */
+	private function render_tp_row( $label, $text ) {
+		echo '<div class="cta-tp-row" style="border:1px solid #dcdcde;border-radius:6px;padding:0.6rem;margin-bottom:0.6rem;">';
+		echo '<p style="margin:0 0 0.4rem;"><input type="text" name="cta_tp_label[]" value="' . esc_attr( $label ) . '" style="width:100%;" placeholder="Short label, e.g. Protects our drinking water"></p>';
+		echo '<textarea name="cta_tp_text[]" rows="3" style="width:100%;" placeholder="The paragraph this point adds to the comment. Links inline are fine.">' . esc_textarea( $text ) . '</textarea>';
+		echo '<p style="margin:0.4rem 0 0;"><button type="button" class="button cta-remove-tp">Remove Point</button></p>';
+		echo '</div>';
+	}
+
 	public function save_meta_data( $post_id ) {
 
-		if ( ! isset( $_POST['cta_meta_box_nonce'] ) || ! wp_verify_nonce( $_POST['cta_meta_box_nonce'], 'cta_meta_box' ) ) {
+		if ( ! isset( $_POST['cta_meta_box_nonce'] )
+			|| ! wp_verify_nonce( sanitize_text_field( wp_unslash( $_POST['cta_meta_box_nonce'] ) ), 'cta_meta_box' ) ) {
 			return;
 		}
 
@@ -687,7 +1050,7 @@ class CTA_Meta {
 				: [];
 			$links  = [];
 			foreach ( $urls as $i => $url ) {
-				$url = sanitize_text_field( $url );
+				$url = esc_url_raw( $url );
 				if ( $url ) {
 					$links[] = [
 						'url'   => $url,
@@ -726,7 +1089,7 @@ class CTA_Meta {
 				: [];
 			$videos = [];
 			foreach ( $urls as $i => $url ) {
-				$url = sanitize_text_field( $url );
+				$url = esc_url_raw( $url );
 				if ( $url ) {
 					$videos[] = [
 						'url'   => $url,
@@ -756,7 +1119,7 @@ class CTA_Meta {
 		}
 
 		if ( isset( $_POST['cta_legislator_url'] ) ) {
-			$legislator_url = sanitize_text_field( wp_unslash( $_POST['cta_legislator_url'] ) );
+			$legislator_url = esc_url_raw( wp_unslash( $_POST['cta_legislator_url'] ) );
 			update_post_meta( $post_id, '_cta_legislator_url', $legislator_url );
 		}
 
@@ -764,5 +1127,77 @@ class CTA_Meta {
 			$button_text = sanitize_text_field( wp_unslash( $_POST['cta_button_text'] ) );
 			update_post_meta( $post_id, '_cta_button_text', $button_text );
 		}
+
+		$this->save_guided_data( $post_id );
+	}
+
+	/**
+	 * Save the Guided (comment builder) fields. Counters (_cta_builds, _cta_confirmed)
+	 * are deliberately NOT touched here; they are owned by the public tracking route.
+	 */
+	private function save_guided_data( $post_id ) {
+
+		$format = isset( $_POST['cta_format'] ) ? sanitize_text_field( wp_unslash( $_POST['cta_format'] ) ) : 'simple';
+		update_post_meta( $post_id, '_cta_format', $this->sanitize_format( $format ) );
+
+		// Talking points: parallel label[] and text[] arrays.
+		if ( isset( $_POST['cta_tp_label'] ) && is_array( $_POST['cta_tp_label'] ) ) {
+			$labels = array_map( 'wp_unslash', $_POST['cta_tp_label'] );
+			$texts  = isset( $_POST['cta_tp_text'] ) && is_array( $_POST['cta_tp_text'] )
+				? array_map( 'wp_unslash', $_POST['cta_tp_text'] )
+				: [];
+			$points = [];
+			foreach ( $labels as $i => $label ) {
+				$label = sanitize_text_field( $label );
+				$text  = wp_kses_post( $texts[ $i ] ?? '' );
+				if ( '' === $label && '' === $text ) {
+					continue;
+				}
+				$points[] = [
+					'label' => $label,
+					'text'  => $text,
+				];
+			}
+			update_post_meta( $post_id, '_cta_talking_points', $points );
+		} else {
+			delete_post_meta( $post_id, '_cta_talking_points' );
+		}
+
+		if ( isset( $_POST['cta_personal_prompts'] ) && is_array( $_POST['cta_personal_prompts'] ) ) {
+			$prompts = array_map( 'wp_unslash', $_POST['cta_personal_prompts'] );
+			$prompts = array_map( 'sanitize_text_field', array_filter( $prompts ) );
+			update_post_meta( $post_id, '_cta_personal_prompts', array_values( $prompts ) );
+		} else {
+			delete_post_meta( $post_id, '_cta_personal_prompts' );
+		}
+
+		$scalars = [
+			'cta_guided_intro'   => [ '_cta_guided_intro', 'sanitize_textarea_field' ],
+			'cta_guided_closing' => [ '_cta_guided_closing', 'sanitize_textarea_field' ],
+			'cta_comment_url'    => [ '_cta_comment_url', 'esc_url_raw' ],
+			'cta_agency'         => [ '_cta_agency', 'sanitize_text_field' ],
+			'cta_docket'         => [ '_cta_docket', 'sanitize_text_field' ],
+		];
+		foreach ( $scalars as $field => $spec ) {
+			if ( isset( $_POST[ $field ] ) ) {
+				$clean = call_user_func( $spec[1], wp_unslash( $_POST[ $field ] ) );
+				update_post_meta( $post_id, $spec[0], $clean );
+			}
+		}
+
+		if ( isset( $_POST['cta_comment_goal'] ) ) {
+			update_post_meta( $post_id, '_cta_comment_goal', absint( wp_unslash( $_POST['cta_comment_goal'] ) ) );
+		}
+
+		$char_limit_mode = isset( $_POST['cta_char_limit_mode'] ) ? sanitize_text_field( wp_unslash( $_POST['cta_char_limit_mode'] ) ) : 'default';
+		update_post_meta( $post_id, '_cta_char_limit_mode', in_array( $char_limit_mode, [ 'default', 'custom' ], true ) ? $char_limit_mode : 'default' );
+		if ( isset( $_POST['cta_char_limit'] ) ) {
+			update_post_meta( $post_id, '_cta_char_limit', absint( wp_unslash( $_POST['cta_char_limit'] ) ) );
+		}
+
+		$identity_mode = isset( $_POST['cta_collect_identity'] ) ? sanitize_text_field( wp_unslash( $_POST['cta_collect_identity'] ) ) : 'default';
+		update_post_meta( $post_id, '_cta_collect_identity', in_array( $identity_mode, [ 'default', 'on', 'off' ], true ) ? $identity_mode : 'default' );
+
+		update_post_meta( $post_id, '_cta_show_counter', empty( $_POST['cta_show_counter'] ) ? 0 : 1 );
 	}
 }

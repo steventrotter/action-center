@@ -1,0 +1,30 @@
+name: Deploy to WordPress.org
+
+# Publishes a tagged GitHub release to the WordPress.org plugin directory via SVN,
+# and syncs the listing assets (icon, banner, screenshots) from .wordpress-org/.
+# Runs only after the plugin is approved and its SVN repo exists.
+#
+# Setup (one time, after approval):
+#   1. Repo Settings > Secrets and variables > Actions, add:
+#        SVN_USERNAME  = your wordpress.org username
+#        SVN_PASSWORD  = your wordpress.org account password
+#   2. If the WordPress.org slug differs from this repo name, set SLUG below.
+#      If they match, delete the SLUG line and the action uses the repo name.
+
+on:
+  release:
+    types: [published]
+
+jobs:
+  deploy:
+    name: Publish tag to WordPress.org
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: WordPress Plugin Deploy
+        uses: 10up/action-wordpress-plugin-deploy@stable
+        env:
+          SVN_USERNAME: ${{ secrets.SVN_USERNAME }}
+          SVN_PASSWORD: ${{ secrets.SVN_PASSWORD }}
+          # SLUG: your-locked-slug   # uncomment and set only if it differs from the repo name

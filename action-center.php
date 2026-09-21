@@ -1,9 +1,9 @@
 <?php
 /**
- * Plugin Name: Action Center
+ * Plugin Name: Fernwood Action Center
  * Plugin URI: https://steventrotter.com/action-center
  * Description: Publish and display Calls to Action: an Action Center listing page, per-action detail pages, an embeddable block, a public JSON feed, and AI-assisted CTA creation through the WordPress MCP connector.
- * Version: 1.2.0
+ * Version: 1.5.0
  * Author: Steven Trotter
  * Author URI: https://steventrotter.com
  * License: GPLv2 or later
@@ -13,7 +13,7 @@
 
 defined( 'ABSPATH' ) || exit;
 
-define( 'CTA_MANAGER_VERSION', '1.2.0' );
+define( 'CTA_MANAGER_VERSION', '1.5.0' );
 
 /**
  * Auto-updates from GitHub releases.
@@ -36,7 +36,7 @@ if ( class_exists( \YahnisElsts\PluginUpdateChecker\v5\PucFactory::class ) ) {
 /**
  * URL of the Action Center listing page (the page holding [cta_list]).
  *
- * Uses the page chosen in Settings > Action Center; falls back to a page
+ * Uses the page chosen in Settings > Fernwood Action Center; falls back to a page
  * with the slug "act-now", then the site front page.
  *
  * @return string
@@ -144,6 +144,7 @@ require_once __DIR__ . '/includes/class-cta-assets.php';
 require_once __DIR__ . '/includes/class-cta-blocks.php';
 require_once __DIR__ . '/includes/class-cta-mcp.php';
 require_once __DIR__ . '/includes/class-cta-feed.php';
+require_once __DIR__ . '/includes/class-cta-track.php';
 
 /**
  * Bootstrap classes.
@@ -154,6 +155,7 @@ new CTA_Assets();
 new CTA_Blocks();
 new CTA_MCP();
 new CTA_Feed();
+new CTA_Track();
 
 /**
  * Add settings link on Plugins screen.

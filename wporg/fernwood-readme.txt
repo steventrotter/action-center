@@ -3,7 +3,7 @@ Contributors: steventrotter
 Tags: nonprofit, advocacy, call to action, petition, activism
 Requires at least: 6.0
 Tested up to: 7.1
-Stable tag: 1.5.0
+Stable tag: 1.3.0
 Requires PHP: 7.4
 License: GPLv2 or later
 License URI: https://www.gnu.org/licenses/gpl-2.0.html
@@ -13,6 +13,8 @@ Publish Calls to Action: a filterable Action Center page, detail pages, an embed
 == Description ==
 
 Fernwood Action Center helps nonprofits and advocacy groups publish Calls to Action (CTAs): petitions, public comment windows, letter-writing campaigns, volunteer asks - anything you want visitors to act on.
+
+It is part of Fernwood, a suite of free tools that help small nonprofits do more with less.
 
 Each CTA has a "Why this Matters" summary, an optional deadline (or an Ongoing flag), ordered Steps to Take, copy-paste Sample Texts, Related Links, Files, and YouTube videos, plus Organization and CTA Type tags.
 
@@ -26,49 +28,35 @@ Features:
 * Public JSON feed at /wp-json/action-center/v1/actions so other websites and apps can display your current actions, including a full-content mode for native apps.
 * AI-assisted CTA creation through the WordPress MCP plugin: an assistant like Claude can draft complete CTAs from a link, always as drafts for your review.
 * JSON import and export of CTAs.
-* Automatic updates: the plugin checks its GitHub repository for new releases and updates through the normal WordPress update flow.
 
-Full documentation lives inside the plugin at Settings > Fernwood Action Center > Documentation.
+Full documentation lives inside the plugin at Settings > Action Center > Documentation.
 
 == Installation ==
 
 1. Upload the plugin zip via Plugins > Add New > Upload Plugin, then activate it.
 2. Create a page for your Action Center and add the [cta_list] shortcode.
-3. Select that page under Settings > Fernwood Action Center.
+3. Select that page under Settings > Action Center.
 4. Add your first CTA under the CTAs menu and publish.
 
 == Frequently Asked Questions ==
 
 = Does deleting the plugin remove my CTAs? =
 
-Yes. Uninstalling (deleting) the plugin removes all CTAs, their tags, and the plugin settings. Deactivating does not remove anything. Export your CTAs from Settings > Fernwood Action Center first if you want a backup.
+Yes. Uninstalling (deleting) the plugin removes all CTAs, their tags, and the plugin settings. Deactivating does not remove anything. Export your CTAs from Settings > Action Center first if you want a backup.
 
 = Is the feed private? =
 
 No. The feed intentionally exposes your published, active CTAs so partner sites can amplify them. Drafts, expired, and ended CTAs are never included.
 
+== Screenshots ==
+
+1. The Action Center listing page: urgent deadline actions first, then ongoing actions, with type and organization filters.
+2. A Guided action: the comment builder with selectable talking points, personal prompts, a live editable draft, and a goal meter.
+3. A Simple action detail page with Steps to Take and copy-paste sample text.
+4. The Upcoming CTAs block embedded in a page.
+5. Editing a CTA in the admin: action format, deadline, steps, and guided builder fields.
+
 == Changelog ==
-
-= 1.5.0 =
-* New: the Guided builder now counts characters the way the government form does (regulations.gov allows 5000) instead of counting words. It shows a live "N / 5000 characters" count and will not hand off a comment that is over the limit. The limit is a site default under Settings and can be overridden per action next to the submission URL; set 0 for no limit.
-* New: asking supporters for their name, city, and state is now optional. Set the default under Settings and override it per action. When it is off, those details stay out of the public comment - supporters still enter their contact information on the submission form itself. This is useful for federal comments (regulations.gov), which become public record, while a local action can keep it on.
-* Changed: the plugin is now named Fernwood Action Center, part of the Fernwood suite of free tools for small nonprofits.
-* Changed: Tested up to WordPress 7.1.
-
-= 1.4.2 =
-* Changed: in the Upcoming CTAs block, each card's action is now a text link with an arrow rather than a filled button, so a block of cards no longer reads as a wall of buttons. "View More Actions" stays the single button.
-* Fixed: the Upcoming CTAs block's "View More Actions" button now aligns to the right as intended. The previous rule relied on auto margins that have no effect on an inline link, so the button sat on the left.
-
-= 1.4.1 =
-* Changed: the Guided comment builder now asks for a full name and separate city and state fields, and notes that the comment becomes part of the public record, since a comment signed by a real person from a real place carries more weight than an anonymous form letter.
-* Fixed: the "Build Your Comment" and "Your Comment Is Copied" headings are now title case to match the rest of the page.
-
-= 1.4.0 =
-* Changed: Guided actions now use a two-part flow. The first screen shows the "Why this Matters" summary, an optional collapsed "learn more" section (videos, files, and links tucked away so they never crowd out the ask), and the comment builder. After the supporter copies their comment, a second screen shows the copied comment, a button that opens the real submission form, and follow-up actions under "More Ways to Help."
-* Changed: removed the "I submitted" confirmation checkbox. The submission happens on another site and cannot be verified, so the only tracked event is now the click that opens the submission form, reported honestly as "comments written" rather than as confirmed submissions.
-* Changed: the public counter is now off by default and enabled per action (Guided Comment Builder > "Show a public counter of comments written").
-* Admin: the Steps box relabels with the Action Format. For a Simple action the steps are the action; for a Guided action they become the follow-up actions shown after a supporter submits their comment.
-* Fixed: the listing filter's Apply button now bottom-aligns with the select controls on themes that do not stretch the button group (for example Astra).
 
 = 1.3.0 =
 * New: Guided action format, an interactive comment builder. Editors choose Simple or Guided per action; Guided actions offer selectable talking points and personal prompt fields that assemble into an editable draft, a copy button, a submission hand-off, and an "I submitted" confirmation.
@@ -96,3 +84,8 @@ No. The feed intentionally exposes your published, active CTAs so partner sites 
 
 = 1.0.0 =
 * First public release.
+
+== Upgrade Notice ==
+
+= 1.3.0 =
+Adds the Guided comment builder and soft engagement counters, plus accessibility, import/export, and security fixes.

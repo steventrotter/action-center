@@ -106,3 +106,39 @@
     border-radius: 3px;
     margin-bottom: 0.5rem;
 }
+/* Add / Remove affordances: additions get a plus, removals go red with a trash icon,
+   so destructive controls read differently from the rest of the buttons. */
+.button[id^="cta-add-"]::before {
+    content: "\f132"; /* dashicons-plus */
+    font-family: dashicons;
+    font-size: 1.05em;
+    line-height: 1;
+    vertical-align: middle;
+    margin-right: 0.3rem;
+    position: relative;
+    top: -1px;
+}
+
+.button[class*="cta-remove-"] {
+    color: #b32d2e;
+    border-color: #b32d2e;
+    background: transparent;
+}
+
+.button[class*="cta-remove-"]:hover,
+.button[class*="cta-remove-"]:focus {
+    color: #8a2424;
+    border-color: #8a2424;
+    background: #fcf0f1;
+}
+
+.button[class*="cta-remove-"]::before {
+    content: "\f182"; /* dashicons-trash */
+    font-family: dashicons;
+    font-size: 1.05em;
+    line-height: 1;
+    vertical-align: middle;
+    margin-right: 0.3rem;
+    position: relative;
+    top: -1px;
+}

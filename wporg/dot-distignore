@@ -1,0 +1,11 @@
+# Files kept out of the WordPress.org SVN checkout (not shipped in the plugin).
+/.git
+/.github
+/.wordpress-org
+/.distignore
+/.gitignore
+/lib
+/builds
+/node_modules
+*.zip
+.DS_Store
